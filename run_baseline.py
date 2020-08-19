@@ -87,6 +87,9 @@ class VideoTracker(object):
 
     def draw_tracking(self, image, tracker, tracking, detections, frame_id, objs_dict):
         if tracking:
+            # if not check_in_polygon(center, ROI_POLYGON):
+            #     continue
+
             # Call the tracker
             tracker.predict()
             tracker.update(detections)
@@ -274,7 +277,11 @@ class VideoTracker(object):
             print("[INFO] Counting....")
             _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
                                                                             objs_dict, counted_obj,
-                                                                            arr_cnt_class, clf_model, clf_labels)                                                             
+                                                                            arr_cnt_class, clf_model, clf_labels) 
+            # delete id counted
+            for track in tracker.tracks:
+                if int(track.track_id) in counted_obj:
+                    track.is_deleted()                                                            
 
             # write result to txt
             with open(self.result_filename, 'a+') as result_file:
