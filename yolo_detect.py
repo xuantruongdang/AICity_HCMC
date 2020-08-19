@@ -20,7 +20,7 @@ from utils.utils import check_in_polygon, check_number_MOI, init_board, write_bo
 
 from shapely.geometry import Point, Polygon
 
-net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
+net = cv2.dnn.readNet("models/yolov3.weights", "configs/yolov3.cfg")
 output_path = os.path.join("results", "my_result.jpg")
 # Name custom object
 classes =  ['di_bo','xe_dap','xe_may','xe_hang_rong','xe_ba_gac','xe_taxi','xe_hoi','xe_ban_tai','xe_cuu_thuong','xe_khach','xe_buyt','xe_tai','xe_container','xe_cuu_hoa']
@@ -72,7 +72,7 @@ def process(video_path, cfg):
     nms_max_overlap = 0.3
 
     counter = []
-    model_filename = 'market1501.pb'
+    model_filename = 'models/market1501.pb'
     encoder = gdet.create_box_encoder(model_filename ,batch_size=4)
     metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
     tracker = Tracker(metric)
@@ -99,6 +99,7 @@ def process(video_path, cfg):
         # Call the tracker
         tracker.predict()
         tracker.update(detections)
+        print("[INFO] track in ROI: ", len(tracker.tracks))
             
         i = int(0)
         indexIDs = []
@@ -116,13 +117,6 @@ def process(video_path, cfg):
             # indexIDs.append(int(track.track_id))
             # counter.append(int(track.track_id))
             bbox = track.to_tlbr()
-            # color = [int(c) for c in COLORS[indexIDs[i] % len(COLORS)]]
-
-            # cv2.rectangle(_frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),(color), 2)
-            # cv2.putText(_frame,str(track.track_id),(int(bbox[0]), int(bbox[1] -50)),0, 5e-3 * 150, (color),2)
-            # if len(class_names) > 0:
-            #    class_name = class_names[0]
-            #    cv2.putText(_frame, str(class_names[0]),(int(bbox[0]), int(bbox[1] -20)),0, 5e-3 * 150, (color),2)
 
             #bbox_center_point(x,y)
             center = (int(((bbox[0])+(bbox[2]))/2),int(((bbox[1])+(bbox[3]))/2))
@@ -173,7 +167,7 @@ def process(video_path, cfg):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--video_path", type=str, default="cam_18.mp4")
+    parser.add_argument("--video_path", type=str, default="data/cam_18.mp4")
     # parser.add_argument("--config_detection", type=str, default="./configs/yolov3.yaml")
     # parser.add_argument("--config_deepsort", type=str, default="./configs/deep_sort.yaml")
     parser.add_argument("--config_cam", type=str, default="./configs/cam18.yaml")

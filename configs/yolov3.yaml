@@ -1,0 +1,4 @@
+YOLOV3:
+  CFG: "configs/yolov3.cfg"
+  WEIGHTS: "models/yolov3.weights"
+  CLASS_NAMES: "data/traffic.names"

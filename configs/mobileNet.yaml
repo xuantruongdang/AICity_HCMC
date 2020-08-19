@@ -1,0 +1,4 @@
+mobileNet:
+    JSON: "models/MobileNets_traffic_recognition.json"
+    WEIGHTS: "models/traffic_recognition.h5"
+    CLASSES: "models/traffic_classes.npy"
