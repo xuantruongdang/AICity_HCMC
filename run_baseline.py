@@ -37,6 +37,7 @@ class VideoTracker(object):
         self.cfg = cfg
         self.args = args
         self.use_classify = args.use_classify
+        self.video_flag = args.video
         self.video_path = args.VIDEO_PATH
         self.detector = build_detector_v3(cfg)
         self.classes = self.detector.classes
@@ -207,7 +208,7 @@ class VideoTracker(object):
 
         return image
 
-    def run(self):
+    def run_video(self):
         # init for classify module
         clf_model = None
         clf_labels = None
@@ -225,6 +226,11 @@ class VideoTracker(object):
         list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
         arr_cnt_class = np.zeros((len(list_classes), self.number_MOI), dtype=int)
 
+        fps = 0.0
+        fps_imutils = imutils.video.FPS().start()
+        counted_obj = []
+        count_frame = 0
+        objs_dict = {}
 
         # file_path = 'data/demo.MOV'
         if asyncVideo_flag:
@@ -246,14 +252,9 @@ class VideoTracker(object):
             out = cv2.VideoWriter('output_yolov4.avi', fourcc, 30, (w, h))
             frame_index = -1
 
-        fps = 0.0
-        fps_imutils = imutils.video.FPS().start()
-        counted_obj = []
-        count_frame = 0
-        objs_dict = {}
         while True:
             count_frame += 1
-            ret, frame = video_capture.read()  # frame shape 640*480*3
+            ret, frame = video_capture.read()  
             if ret != True:
                 break
 
@@ -327,6 +328,116 @@ class VideoTracker(object):
 
         cv2.destroyAllWindows()
 
+    # def run_img(self):
+    #     # init for classify module
+    #     clf_model = None
+    #     clf_labels = None
+    #     if self.use_classify:
+    #         clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
+
+    #     encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
+    #     metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
+    #     tracker = Tracker(metric)
+
+    #     tracking = True
+    #     writeVideo_flag = True
+    #     asyncVideo_flag = False
+
+    #     list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
+    #     arr_cnt_class = np.zeros((len(list_classes), self.number_MOI), dtype=int)
+
+    #     fps = 0.0
+    #     fps_imutils = imutils.video.FPS().start()
+    #     counted_obj = []
+    #     count_frame = 0
+    #     objs_dict = {}
+
+    #     # file_path = 'data/demo.MOV'
+    #     if asyncVideo_flag:
+    #         video_capture = VideoCaptureAsync(self.video_path)
+    #     else:
+    #         video_capture = cv2.VideoCapture(self.video_path)
+
+    #     if asyncVideo_flag:
+    #         video_capture.start()
+
+    #     if writeVideo_flag:
+    #         if asyncVideo_flag:
+    #             w = int(video_capture.cap.get(3))
+    #             h = int(video_capture.cap.get(4))
+    #         else:
+    #             w = int(video_capture.get(3))
+    #             h = int(video_capture.get(4))
+    #         fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    #         out = cv2.VideoWriter('output_yolov4.avi', fourcc, 30, (w, h))
+    #         frame_index = -1
+
+    #     while True:
+    #         count_frame += 1
+    #         ret, frame = video_capture.read()  
+    #         if ret != True:
+    #             break
+
+    #         t1 = time.time()
+    #         # frame = cv2.flip(frame, -1)
+
+    #         _frame = frame
+    #         _frame = MOI.config_cam(_frame, self.cfg)
+
+    #         # draw board
+    #         ROI_board = np.zeros((150, 170, 3), np.int)
+    #         _frame[0:150, 0:170] = ROI_board
+    #         _frame, list_col = init_board(_frame, self.number_MOI)
+
+    #         _frame_height, _frame_width = _frame.shape[:2]
+    #         cropped_frame = frame 
+    #         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
+
+    #         print("[INFO] Detecting.....")
+    #         detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+    #         print("[INFO] Tracking....")
+    #         _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+    #         print("[INFO] Counting....")
+    #         _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
+    #                                                                         objs_dict, counted_obj,
+    #                                                                         arr_cnt_class, clf_model, clf_labels) 
+    #         # delete counted id
+    #         for track in tracker.tracks:
+    #             if int(track.track_id) in counted_obj:
+    #                 track.delete()                                                            
+
+    #         # write result to txt
+    #         with open(self.result_filename, 'a+') as result_file:
+    #             for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
+    #                 result_file.write('{} {} {} {}\n'.format(
+    #                     self.video_name, frame_id, movement_id, vehicle_class_id))
+
+    #         # write number to scoreboard
+    #         _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+
+    #         # visualize
+    #         if self.args.visualize:
+    #             _frame = imutils.resize(_frame, width=1000)
+    #             cv2.imshow("Final result", _frame)
+
+    #         if writeVideo_flag:  # and not asyncVideo_flag:
+    #             # save a frame
+    #             out.write(_frame)
+    #             frame_index = frame_index + 1
+
+    #         fps_imutils.update()
+
+    #         if not asyncVideo_flag:
+    #             fps = (fps + (1./(time.time()-t1))) / 2
+    #             print("FPS = %f" % (fps))
+
+    #         # Press Q to stop!
+    #         if cv2.waitKey(1) & 0xFF == ord('q'):
+    #             break
+
+    #     fps_imutils.stop()
+    #     print('imutils FPS: {}'.format(fps_imutils.fps()))
+
 
 def create_logs_dir():
     if not os.path.exists('logs'):
@@ -372,6 +483,7 @@ def parse_args():
     parser.add_argument("--use_classify", type=bool, default=False)
     parser.add_argument("--config_classifier", type=str, default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
+    parser.add_argument("--video", type=bool, default=True)
 
     return parser.parse_args()
 
@@ -396,4 +508,7 @@ if __name__ == '__main__':
                                                                                     log_detected_dir, log_tracking_dir, log_output_dir)
 
     video_tracker = VideoTracker(cfg, args)
-    video_tracker.run()
+    if args.video:
+        video_tracker.run_video()
+    else:
+        video_tracker.run_img()
