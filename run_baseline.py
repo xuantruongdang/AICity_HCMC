@@ -355,7 +355,9 @@ class VideoTracker(object):
         lines = path_file.readlines()
         txt_name = os.path.basename(self.video_path)
         farther_path = self.video_path.rstrip(txt_name)
+        print(farther_path)
         for line in lines:
+            line = line.rstrip('\n')
             count_frame += 1
             if len(line) < 5:
                 continue
@@ -463,7 +465,7 @@ def parse_args():
     parser.add_argument("--use_classify", type=bool, default=False)
     parser.add_argument("--config_classifier", type=str, default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
-    parser.add_argument("--video", type=bool, default=True)
+    parser.add_argument("--video", type=bool, default=False)
 
     return parser.parse_args()
 
@@ -488,7 +490,10 @@ if __name__ == '__main__':
                                                                                     log_detected_dir, log_tracking_dir, log_output_dir)
 
     video_tracker = VideoTracker(cfg, args)
+    print('args.video: ',args.video)
     if args.video:
+        print('*****in video-mode*****')
         video_tracker.run_video()
     else:
+        print('*****in image-mode*****')
         video_tracker.run_img()
