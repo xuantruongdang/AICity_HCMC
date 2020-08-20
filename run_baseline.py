@@ -410,13 +410,15 @@ class VideoTracker(object):
             # write number to scoreboard
             _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
 
+            out.write(_frame)
+            frame_index = frame_index + 1
+            
             # visualize
             if self.args.visualize:
                 _frame = imutils.resize(_frame, width=1000)
                 cv2.imshow("Final result", _frame)
 
-            out.write(_frame)
-            frame_index = frame_index + 1
+            
 
             fps_imutils.update()
 
