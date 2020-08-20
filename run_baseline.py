@@ -196,7 +196,8 @@ class VideoTracker(object):
 
                     counted_obj.append(int(track_id))
                     class_id = self.compare_class(class_id)
-                    arr_cnt_class[class_id][moi-1] += 1
+                    if moi > 0:
+                        arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((frame_id, moi, class_id+1))
         
@@ -412,7 +413,7 @@ class VideoTracker(object):
 
             out.write(_frame)
             frame_index = frame_index + 1
-            
+
             # visualize
             if self.args.visualize:
                 _frame = imutils.resize(_frame, width=1000)
