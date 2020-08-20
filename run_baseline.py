@@ -42,7 +42,10 @@ class VideoTracker(object):
         self.detector = build_detector_v3(cfg)
         self.classes = self.detector.classes
         self.track_line = []
-        self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
+        if os.path.basename(args.VIDEO_PATH).split('.')[1] == 'txt':
+            self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0].rstrip("_files")
+        else:
+            self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
         self.result_filename = os.path.join(
             './logs/output', self.video_name + '_result.txt')
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
