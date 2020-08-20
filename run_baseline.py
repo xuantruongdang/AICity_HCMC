@@ -328,115 +328,95 @@ class VideoTracker(object):
 
         cv2.destroyAllWindows()
 
-    # def run_img(self):
-    #     # init for classify module
-    #     clf_model = None
-    #     clf_labels = None
-    #     if self.use_classify:
-    #         clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
+    def run_img(self):
+        # init for classify module
+        clf_model = None
+        clf_labels = None
+        if self.use_classify:
+            clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
 
-    #     encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
-    #     metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
-    #     tracker = Tracker(metric)
+        encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
+        metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
+        tracker = Tracker(metric)
 
-    #     tracking = True
-    #     writeVideo_flag = True
-    #     asyncVideo_flag = False
+        tracking = True
+        asyncVideo_flag = False
 
-    #     list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
-    #     arr_cnt_class = np.zeros((len(list_classes), self.number_MOI), dtype=int)
+        list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
+        arr_cnt_class = np.zeros((len(list_classes), self.number_MOI), dtype=int)
 
-    #     fps = 0.0
-    #     fps_imutils = imutils.video.FPS().start()
-    #     counted_obj = []
-    #     count_frame = 0
-    #     objs_dict = {}
+        fps = 0.0
+        fps_imutils = imutils.video.FPS().start()
+        counted_obj = []
+        count_frame = 0
+        objs_dict = {}
 
-    #     # file_path = 'data/demo.MOV'
-    #     if asyncVideo_flag:
-    #         video_capture = VideoCaptureAsync(self.video_path)
-    #     else:
-    #         video_capture = cv2.VideoCapture(self.video_path)
+        path_file = open(self.video_path, 'r')
+        lines = path_file.readlines()
+        txt_name = os.path.basename(self.video_path)
+        farther_path = self.video_path.rstrip(txt_name)
+        for line in lines:
+            count_frame += 1
+            if len(line) < 5:
+                continue
+            img_path = os.path.join(farther_path, line)
+            print(img_path)
+            frame = cv2.imread(img_path)
 
-    #     if asyncVideo_flag:
-    #         video_capture.start()
+            t1 = time.time()
+            # frame = cv2.flip(frame, -1)
 
-    #     if writeVideo_flag:
-    #         if asyncVideo_flag:
-    #             w = int(video_capture.cap.get(3))
-    #             h = int(video_capture.cap.get(4))
-    #         else:
-    #             w = int(video_capture.get(3))
-    #             h = int(video_capture.get(4))
-    #         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    #         out = cv2.VideoWriter('output_yolov4.avi', fourcc, 30, (w, h))
-    #         frame_index = -1
+            _frame = frame
+            _frame = MOI.config_cam(_frame, self.cfg)
 
-    #     while True:
-    #         count_frame += 1
-    #         ret, frame = video_capture.read()  
-    #         if ret != True:
-    #             break
+            # draw board
+            ROI_board = np.zeros((150, 170, 3), np.int)
+            _frame[0:150, 0:170] = ROI_board
+            _frame, list_col = init_board(_frame, self.number_MOI)
 
-    #         t1 = time.time()
-    #         # frame = cv2.flip(frame, -1)
+            _frame_height, _frame_width = _frame.shape[:2]
+            cropped_frame = frame 
+            # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
 
-    #         _frame = frame
-    #         _frame = MOI.config_cam(_frame, self.cfg)
+            print("[INFO] Detecting.....")
+            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+            print("[INFO] Tracking....")
+            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+            print("[INFO] Counting....")
+            _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
+                                                                            objs_dict, counted_obj,
+                                                                            arr_cnt_class, clf_model, clf_labels) 
+            # delete counted id
+            for track in tracker.tracks:
+                if int(track.track_id) in counted_obj:
+                    track.delete()                                                            
 
-    #         # draw board
-    #         ROI_board = np.zeros((150, 170, 3), np.int)
-    #         _frame[0:150, 0:170] = ROI_board
-    #         _frame, list_col = init_board(_frame, self.number_MOI)
+            # write result to txt
+            with open(self.result_filename, 'a+') as result_file:
+                for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
+                    result_file.write('{} {} {} {}\n'.format(
+                        self.video_name, frame_id, movement_id, vehicle_class_id))
 
-    #         _frame_height, _frame_width = _frame.shape[:2]
-    #         cropped_frame = frame 
-    #         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
+            # write number to scoreboard
+            _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
 
-    #         print("[INFO] Detecting.....")
-    #         detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
-    #         print("[INFO] Tracking....")
-    #         _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
-    #         print("[INFO] Counting....")
-    #         _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
-    #                                                                         objs_dict, counted_obj,
-    #                                                                         arr_cnt_class, clf_model, clf_labels) 
-    #         # delete counted id
-    #         for track in tracker.tracks:
-    #             if int(track.track_id) in counted_obj:
-    #                 track.delete()                                                            
+            # visualize
+            if self.args.visualize:
+                _frame = imutils.resize(_frame, width=1000)
+                cv2.imshow("Final result", _frame)
 
-    #         # write result to txt
-    #         with open(self.result_filename, 'a+') as result_file:
-    #             for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
-    #                 result_file.write('{} {} {} {}\n'.format(
-    #                     self.video_name, frame_id, movement_id, vehicle_class_id))
+            fps_imutils.update()
 
-    #         # write number to scoreboard
-    #         _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+            if not asyncVideo_flag:
+                fps = (fps + (1./(time.time()-t1))) / 2
+                print("FPS = %f" % (fps))
 
-    #         # visualize
-    #         if self.args.visualize:
-    #             _frame = imutils.resize(_frame, width=1000)
-    #             cv2.imshow("Final result", _frame)
+            # Press Q to stop!
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    #         if writeVideo_flag:  # and not asyncVideo_flag:
-    #             # save a frame
-    #             out.write(_frame)
-    #             frame_index = frame_index + 1
-
-    #         fps_imutils.update()
-
-    #         if not asyncVideo_flag:
-    #             fps = (fps + (1./(time.time()-t1))) / 2
-    #             print("FPS = %f" % (fps))
-
-    #         # Press Q to stop!
-    #         if cv2.waitKey(1) & 0xFF == ord('q'):
-    #             break
-
-    #     fps_imutils.stop()
-    #     print('imutils FPS: {}'.format(fps_imutils.fps()))
+        fps_imutils.stop()
+        print('imutils FPS: {}'.format(fps_imutils.fps()))
 
 
 def create_logs_dir():
