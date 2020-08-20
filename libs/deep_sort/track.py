@@ -171,6 +171,9 @@ class Track:
         """Returns True if this track is dead and should be deleted."""
         return self.state == TrackState.Deleted
 
+    def delete(self):
+        self.state = TrackState.Deleted
+
     def draw_track_line(self,image):
         if len(self.track_line) > 1:
           for i in range(len(self.track_line)-1):

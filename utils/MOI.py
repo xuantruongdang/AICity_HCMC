@@ -11,11 +11,14 @@ class Point:
 
 def config_cam(img, cfg):
     arr = cfg.CAM.ROI_DEFAULT
+    arr1 = cfg.CAM.TRACKING_ROI
 
     pts = np.array(arr)
-    
+    pts1 = np.array(arr1)
+
     # plot ROI
     cv2.drawContours(img, [pts], -1, (0, 0, 255), 2)
+    cv2.drawContours(img, [pts1], -1, (0, 255, 0), 2)
 
     # plot calibrations lines
     line1 = cfg.CAM.LINE1

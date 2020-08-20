@@ -45,6 +45,7 @@ class VideoTracker(object):
         self.result_filename = os.path.join(
             './logs/output', self.video_name + '_result.txt')
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
+        self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
         self.number_MOI = cfg.CAM.NUMBER_MOI
 
     def run_detection(self, image, encoder, tracking, frame_id):
@@ -59,14 +60,15 @@ class VideoTracker(object):
         indices = preprocessing.non_max_suppression(
             boxes, self.cfg.DEEPSORT.NMS_MAX_OVERLAP, scores)
         detections = [detections[i] for i in indices]
+        detections_in_ROI = []
 
         print("[INFO] detected: ", len(detections))
-        # for det in detections:
-        #     bbox = det.to_tlbr()
-        #     centroid_det = (int((bbox[0] + bbox[2])//2), int((bbox[1] + bbox[3])//2))
-        #     if check_in_polygon(centroid_det, self.polygon_ROI):
-        #         detections_in_ROI.append(det)
-        # print("[INFO] detections in ROI: ", len(detections_in_ROI))
+        for det in detections:
+            bbox = det.to_tlbr()
+            centroid_det = (int((bbox[0] + bbox[2])//2), int((bbox[1] + bbox[3])//2))
+            if check_in_polygon(centroid_det, self.TRACKING_ROI):
+                detections_in_ROI.append(det)
+        print("[INFO] detections in ROI: ", len(detections_in_ROI))
         logFile = os.path.join(log_detected_cam_dir,
                                'frame_' + str(frame_id) + '.txt')
         with open(logFile, "a+") as f:
@@ -83,7 +85,7 @@ class VideoTracker(object):
 
         print("-----------------")
         # return detections_in_ROI
-        return detections
+        return detections, detections_in_ROI
 
     def draw_tracking(self, image, tracker, tracking, detections, frame_id, objs_dict):
         if tracking:
@@ -271,17 +273,17 @@ class VideoTracker(object):
             # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
 
             print("[INFO] Detecting.....")
-            detections = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
             print("[INFO] Tracking....")
-            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections, count_frame, objs_dict)
+            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
             print("[INFO] Counting....")
             _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
                                                                             objs_dict, counted_obj,
                                                                             arr_cnt_class, clf_model, clf_labels) 
-            # delete id counted
+            # delete counted id
             for track in tracker.tracks:
                 if int(track.track_id) in counted_obj:
-                    track.is_deleted()                                                            
+                    track.delete()                                                            
 
             # write result to txt
             with open(self.result_filename, 'a+') as result_file:
