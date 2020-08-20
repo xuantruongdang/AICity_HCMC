@@ -345,6 +345,10 @@ class VideoTracker(object):
         tracking = True
         asyncVideo_flag = False
 
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (1280, 720))
+        frame_index = -1
+
         list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
         arr_cnt_class = np.zeros((len(list_classes), self.number_MOI), dtype=int)
 
@@ -358,6 +362,7 @@ class VideoTracker(object):
         lines = path_file.readlines()
         txt_name = os.path.basename(self.video_path)
         farther_path = self.video_path.rstrip(txt_name)
+
         print(farther_path)
         for line in lines:
             line = line.rstrip('\n')
@@ -410,6 +415,9 @@ class VideoTracker(object):
                 _frame = imutils.resize(_frame, width=1000)
                 cv2.imshow("Final result", _frame)
 
+            out.write(_frame)
+            frame_index = frame_index + 1
+
             fps_imutils.update()
 
             if not asyncVideo_flag:
@@ -422,6 +430,8 @@ class VideoTracker(object):
 
         fps_imutils.stop()
         print('imutils FPS: {}'.format(fps_imutils.fps()))
+        out.release()
+        cv2.destroyAllWindows()
 
 
 def create_logs_dir():
