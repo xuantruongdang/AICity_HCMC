@@ -163,3 +163,6 @@ frames/
 zones-movement_paths/
 
 *.pth
+log.txt
+detectron2/
+det_dir/
