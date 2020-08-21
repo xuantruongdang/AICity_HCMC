@@ -11,3 +11,13 @@ CAM:
     LINE4: [[621, 228], [510, 342]]
     LINE5: [[12, 417], [118, 417]]
     LINE6: [[448, 393], [280, 609]]
+    LINE: [[[107, 386], [315, 505]], [[615, 257], [775, 297]], [[284, 244], [300, 294]], [[621, 228], [510, 342]], [[12, 417], [118, 417]], [[448, 393], [280, 609]]]
+
+    # for kalman filter - kalman_filter.py
+    _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
+    _STD_WEIGHT_VELOCITY: 10         # inverse of _std_weight_velocity
+
+    # config for tracker - tracker.py
+    MAX_IOU_DISTANCE: 0.85
+    MAX_AGE: 3
+    N_INIT: 1

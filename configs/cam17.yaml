@@ -8,3 +8,13 @@ CAM:
   LINE1: [[63, 335], [627, 287]]
   LINE2: [[494, 196], [565, 243]]
   LINE3: [[682, 249], [976, 400]]
+  LINE: [[[63, 335], [627, 287]], [[494, 196], [565, 243]], [[682, 249], [976, 400]]]
+
+  # for kalman filter - kalman_filter.py
+  _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
+  _STD_WEIGHT_VELOCITY: 10         # inverse of _std_weight_velocity
+
+  # config for tracker - tracker.py
+  MAX_IOU_DISTANCE: 0.85
+  MAX_AGE: 3
+  N_INIT: 1

@@ -7,3 +7,13 @@
     # MOI2: [[925, 487], [715, 144]]
     LINE1: [[3, 439], [553, 438]]
     LINE2: [[620, 250], [980, 267]]
+    LINE: [[[3, 439], [553, 438]], [[620, 250], [980, 267]]]
+
+    # for kalman filter - kalman_filter.py
+    _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
+    _STD_WEIGHT_VELOCITY: 10         # inverse of _std_weight_velocity
+
+    # config for tracker - tracker.py
+    MAX_IOU_DISTANCE: 0.85
+    MAX_AGE: 3
+    N_INIT: 1
