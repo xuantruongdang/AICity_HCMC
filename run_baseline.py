@@ -160,16 +160,16 @@ class VideoTracker(object):
         class_id = mobileNet.predict_from_model(obj_img, clf_model, clf_labels)
         return int(class_id)
         
-    def compare_class(self, class_id):
-        if (class_id >= 0 and class_id <= 4):
-            class_id = 0
-        if (class_id > 4 and class_id <= 7):
-            class_id = 1
-        if (class_id == 9 or class_id == 10):
-            class_id = 2
-        if (class_id == 8 or (class_id <= 13 and class_id > 10)):
-            class_id = 3
-        return class_id
+    # def compare_class(self, class_id):
+    #     if (class_id >= 0 and class_id <= 4):
+    #         class_id = 0
+    #     if (class_id > 4 and class_id <= 7):
+    #         class_id = 1
+    #     if (class_id == 9 or class_id == 10):
+    #         class_id = 2
+    #     if (class_id == 8 or (class_id <= 13 and class_id > 10)):
+    #         class_id = 3
+    #     return class_id
 
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
@@ -196,7 +196,7 @@ class VideoTracker(object):
                     moi  ,_ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
                     counted_obj.append(int(track_id))
-                    class_id = self.compare_class(class_id)
+                    #class_id = self.compare_class(class_id)
                     if moi > 0:
                         arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
