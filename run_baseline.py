@@ -138,6 +138,7 @@ class VideoTracker(object):
                                 1e-3 * image.shape[0], (0, 255, 0), 1)
                     cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
+                    print('objs in track list: ', tracker.get_number_obj())
                     # draw track line
                     image = track.draw_track_line(image)
 
