@@ -212,6 +212,46 @@ class VideoTracker(object):
 
         return image
 
+    def process(self, frame, count_frame, encoder, tracking, tracker, objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels):
+        _frame = frame
+
+        # draw ROI and calibrate lines
+        _frame = MOI.config_cam(_frame, self.cfg)
+
+        # draw board
+        ROI_board = np.zeros((150, 170, 3), np.int)
+        _frame[0:150, 0:170] = ROI_board
+        _frame, list_col = init_board(_frame, self.number_MOI)
+
+        # if want to detect in path of original frame
+        _frame_height, _frame_width = _frame.shape[:2]
+        cropped_frame = frame           
+        # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
+        
+        print("[INFO] Detecting.....")
+        detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+        print("[INFO] Tracking....")
+        _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+        print("[INFO] Counting....")
+        _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
+                                                                        objs_dict, counted_obj,
+                                                                        arr_cnt_class, clf_model, clf_labels) 
+        # delete counted id
+        for track in tracker.tracks:
+            if int(track.track_id) in counted_obj:
+                track.delete()  
+
+        # write result to txt
+        with open(self.result_filename, 'a+') as result_file:
+            for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
+                result_file.write('{} {} {} {}\n'.format(
+                    self.video_name, frame_id, movement_id, vehicle_class_id))
+
+        # write number to scoreboard
+        _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+        
+        return _frame
+
     def run_video(self):
         # init for classify module
         clf_model = None
@@ -265,39 +305,8 @@ class VideoTracker(object):
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = frame
-            _frame = MOI.config_cam(_frame, self.cfg)
-
-            # draw board
-            ROI_board = np.zeros((150, 170, 3), np.int)
-            _frame[0:150, 0:170] = ROI_board
-            _frame, list_col = init_board(_frame, self.number_MOI)
-
-            _frame_height, _frame_width = _frame.shape[:2]
-            cropped_frame = frame 
-            # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
-
-            print("[INFO] Detecting.....")
-            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
-            print("[INFO] Tracking....")
-            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
-            print("[INFO] Counting....")
-            _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
-                                                                            objs_dict, counted_obj,
-                                                                            arr_cnt_class, clf_model, clf_labels) 
-            # delete counted id
-            for track in tracker.tracks:
-                if int(track.track_id) in counted_obj:
-                    track.delete()                                                            
-
-            # write result to txt
-            with open(self.result_filename, 'a+') as result_file:
-                for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
-                    result_file.write('{} {} {} {}\n'.format(
-                        self.video_name, frame_id, movement_id, vehicle_class_id))
-
-            # write number to scoreboard
-            _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+                                    objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             # visualize
             if self.args.visualize:
@@ -377,39 +386,8 @@ class VideoTracker(object):
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = frame
-            _frame = MOI.config_cam(_frame, self.cfg)
-
-            # draw board
-            ROI_board = np.zeros((150, 170, 3), np.int)
-            _frame[0:150, 0:170] = ROI_board
-            _frame, list_col = init_board(_frame, self.number_MOI)
-
-            _frame_height, _frame_width = _frame.shape[:2]
-            cropped_frame = frame 
-            # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
-
-            print("[INFO] Detecting.....")
-            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
-            print("[INFO] Tracking....")
-            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
-            print("[INFO] Counting....")
-            _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
-                                                                            objs_dict, counted_obj,
-                                                                            arr_cnt_class, clf_model, clf_labels) 
-            # delete counted id
-            for track in tracker.tracks:
-                if int(track.track_id) in counted_obj:
-                    track.delete()                                                            
-
-            # write result to txt
-            with open(self.result_filename, 'a+') as result_file:
-                for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
-                    result_file.write('{} {} {} {}\n'.format(
-                        self.video_name, frame_id, movement_id, vehicle_class_id))
-
-            # write number to scoreboard
-            _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+                                    objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             out.write(_frame)
             frame_index = frame_index + 1
