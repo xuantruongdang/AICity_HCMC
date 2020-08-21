@@ -1,0 +1,19 @@
+h5py==2.10.0
+imutils==0.5.3
+Keras==2.3.1
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.2
+numpy==1.19.1
+opencv-python==4.3.0.36
+parse-utils==1.2
+Pillow==7.2.0
+PyYAML==5.3.1
+scikit-learn==0.22.2
+scipy==1.5.2
+Shapely==1.7.0
+six==1.15.0
+tensorboard==1.14.0
+tensorflow==1.14.0
+tensorflow-estimator==1.14.0
+torch @ https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
+tqdm==4.48.2
