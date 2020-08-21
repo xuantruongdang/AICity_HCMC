@@ -166,3 +166,4 @@ zones-movement_paths/
 log.txt
 detectron2/
 det_dir/
+myEnv/
