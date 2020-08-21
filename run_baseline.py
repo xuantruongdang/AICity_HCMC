@@ -192,6 +192,10 @@ class VideoTracker(object):
                     else:
                         class_id = info_obj['class_id']
 
+                    # special class not in contest
+                    if class_id == 4:
+                        continue
+
                     # MOI of obj
                     moi  ,_ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
