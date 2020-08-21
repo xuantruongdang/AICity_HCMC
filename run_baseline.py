@@ -160,16 +160,16 @@ class VideoTracker(object):
         class_id = mobileNet.predict_from_model(obj_img, clf_model, clf_labels)
         return int(class_id)
         
-    def compare_class(self, class_id):
-        if (class_id >= 0 and class_id <= 4):
-            class_id = 0
-        if (class_id > 4 and class_id <= 7):
-            class_id = 1
-        if (class_id == 9 or class_id == 10):
-            class_id = 2
-        if (class_id == 8 or (class_id <= 13 and class_id > 10)):
-            class_id = 3
-        return class_id
+    # def compare_class(self, class_id):
+    #     if (class_id >= 0 and class_id <= 4):
+    #         class_id = 0
+    #     if (class_id > 4 and class_id <= 7):
+    #         class_id = 1
+    #     if (class_id == 9 or class_id == 10):
+    #         class_id = 2
+    #     if (class_id == 8 or (class_id <= 13 and class_id > 10)):
+    #         class_id = 3
+    #     return class_id
 
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
@@ -192,11 +192,15 @@ class VideoTracker(object):
                     else:
                         class_id = info_obj['class_id']
 
+                    # special class not in contest
+                    if class_id == 4:
+                        continue
+
                     # MOI of obj
                     moi  ,_ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
                     counted_obj.append(int(track_id))
-                    class_id = self.compare_class(class_id)
+                    #class_id = self.compare_class(class_id)
                     if moi > 0:
                         arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
@@ -213,6 +217,46 @@ class VideoTracker(object):
 
         return image
 
+    def process(self, frame, count_frame, encoder, tracking, tracker, objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels):
+        _frame = frame
+
+        # draw ROI and calibrate lines
+        _frame = MOI.config_cam(_frame, self.cfg)
+
+        # draw board
+        ROI_board = np.zeros((150, 170, 3), np.int)
+        _frame[0:150, 0:170] = ROI_board
+        _frame, list_col = init_board(_frame, self.number_MOI)
+
+        # if want to detect in path of original frame
+        _frame_height, _frame_width = _frame.shape[:2]
+        cropped_frame = frame           
+        # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
+        
+        print("[INFO] Detecting.....")
+        detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+        print("[INFO] Tracking....")
+        _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+        print("[INFO] Counting....")
+        _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
+                                                                        objs_dict, counted_obj,
+                                                                        arr_cnt_class, clf_model, clf_labels) 
+        # delete counted id
+        for track in tracker.tracks:
+            if int(track.track_id) in counted_obj:
+                track.delete()  
+
+        # write result to txt
+        with open(self.result_filename, 'a+') as result_file:
+            for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
+                result_file.write('{} {} {} {}\n'.format(
+                    self.video_name, frame_id, movement_id, vehicle_class_id))
+
+        # write number to scoreboard
+        _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+        
+        return _frame
+
     def run_video(self):
         # init for classify module
         clf_model = None
@@ -222,7 +266,7 @@ class VideoTracker(object):
 
         encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
-        tracker = Tracker(metric)
+        tracker = Tracker(self.cfg, metric)
 
         tracking = True
         writeVideo_flag = True
@@ -266,39 +310,8 @@ class VideoTracker(object):
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = frame
-            _frame = MOI.config_cam(_frame, self.cfg)
-
-            # draw board
-            ROI_board = np.zeros((150, 170, 3), np.int)
-            _frame[0:150, 0:170] = ROI_board
-            _frame, list_col = init_board(_frame, self.number_MOI)
-
-            _frame_height, _frame_width = _frame.shape[:2]
-            cropped_frame = frame 
-            # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
-
-            print("[INFO] Detecting.....")
-            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
-            print("[INFO] Tracking....")
-            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
-            print("[INFO] Counting....")
-            _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
-                                                                            objs_dict, counted_obj,
-                                                                            arr_cnt_class, clf_model, clf_labels) 
-            # delete counted id
-            for track in tracker.tracks:
-                if int(track.track_id) in counted_obj:
-                    track.delete()                                                            
-
-            # write result to txt
-            with open(self.result_filename, 'a+') as result_file:
-                for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
-                    result_file.write('{} {} {} {}\n'.format(
-                        self.video_name, frame_id, movement_id, vehicle_class_id))
-
-            # write number to scoreboard
-            _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+                                    objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             # visualize
             if self.args.visualize:
@@ -342,7 +355,7 @@ class VideoTracker(object):
 
         encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
-        tracker = Tracker(metric)
+        tracker = Tracker(self.cfg, metric)
 
         tracking = True
         asyncVideo_flag = False
@@ -378,39 +391,8 @@ class VideoTracker(object):
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = frame
-            _frame = MOI.config_cam(_frame, self.cfg)
-
-            # draw board
-            ROI_board = np.zeros((150, 170, 3), np.int)
-            _frame[0:150, 0:170] = ROI_board
-            _frame, list_col = init_board(_frame, self.number_MOI)
-
-            _frame_height, _frame_width = _frame.shape[:2]
-            cropped_frame = frame 
-            # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
-
-            print("[INFO] Detecting.....")
-            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
-            print("[INFO] Tracking....")
-            _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
-            print("[INFO] Counting....")
-            _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
-                                                                            objs_dict, counted_obj,
-                                                                            arr_cnt_class, clf_model, clf_labels) 
-            # delete counted id
-            for track in tracker.tracks:
-                if int(track.track_id) in counted_obj:
-                    track.delete()                                                            
-
-            # write result to txt
-            with open(self.result_filename, 'a+') as result_file:
-                for frame_id, movement_id, vehicle_class_id in vehicles_detection_list:
-                    result_file.write('{} {} {} {}\n'.format(
-                        self.video_name, frame_id, movement_id, vehicle_class_id))
-
-            # write number to scoreboard
-            _frame = write_board(_frame, arr_cnt_class, list_col, self.number_MOI)
+            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+                                    objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             out.write(_frame)
             frame_index = frame_index + 1
@@ -478,7 +460,7 @@ def parse_args():
     parser.add_argument("VIDEO_PATH", type=str)
     parser.add_argument("--config_detection", type=str, default="./configs/yolov3.yaml")
     parser.add_argument("--config_deepsort", type=str, default="./configs/deep_sort.yaml")
-    parser.add_argument("--config_cam", type=str, default="./configs/cam1.yaml")
+    parser.add_argument("--config_cam", type=str, default="./configs/cam6.yaml")
     parser.add_argument("--use_classify", type=bool, default=False)
     parser.add_argument("--config_classifier", type=str, default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)

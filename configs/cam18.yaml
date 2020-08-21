@@ -10,7 +10,10 @@ CAM:
   # ROI_MOI: [[[130, 310], [425, 460], [333, 530], [2, 370]], [[750, 190], [780, 175], [950, 215], [940, 250]]]
   LINE1: [[207, 279], [462, 412]]
   LINE2: [[748, 214], [937, 278]]
+<<<<<<< HEAD
   LINE: [[[207, 279], [462, 412]], [[748, 214], [937, 278]]]
+=======
+>>>>>>> master
 
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
