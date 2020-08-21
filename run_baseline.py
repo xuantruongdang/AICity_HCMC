@@ -262,7 +262,7 @@ class VideoTracker(object):
 
         encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
-        tracker = Tracker(metric)
+        tracker = Tracker(self.cfg, metric)
 
         tracking = True
         writeVideo_flag = True
@@ -351,7 +351,7 @@ class VideoTracker(object):
 
         encoder = gdet.create_box_encoder(self.cfg.DEEPSORT.MODEL, batch_size=4)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", self.cfg.DEEPSORT.MAX_COSINE_DISTANCE, self.cfg.DEEPSORT.NN_BUDGET)
-        tracker = Tracker(metric)
+        tracker = Tracker(self.cfg, metric)
 
         tracking = True
         asyncVideo_flag = False
