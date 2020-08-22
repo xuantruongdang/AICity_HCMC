@@ -1,19 +1,21 @@
 CAM:
     NAME: "CAM_04"
     NUMBER_MOI: 2
-    ROI_DEFAULT: [[1, 567], [484, 171], [756, 164], [910, 719], [0, 718]]
-    TRACKING_ROI: [[1, 567], [515, 125], [740, 120], [910, 719], [0, 718]]
+    #ROI_DEFAULT: [[1, 567], [484, 171], [756, 164], [910, 719], [0, 718]]
+    ROI_DEFAULT: [[1, 567], [382,254], [782,246], [862,549]]
+    TRACKING_ROI: [[1, 567], [382,254],[593,253],[617,211],[766,209], [782,246], [862,549],[448,555],[424,631],[3,634]]
     # MOI1: [[549, 144], [297, 505]]
     # MOI2: [[925, 487], [715, 144]]
-    LINE1: [[320, 647], [1, 630]]
-    LINE2: [[613, 216], [755, 215]]
-    LINE: [[[320, 647], [1, 630]], [[613, 216], [755, 215]]]
+    LINE1: [[290,467], [480,480]]
+    LINE2: [[557,364], [813,355]]
+    LINE: [[[290,467], [480,480]], [[557,364], [813,355]]]
+
     
   # for kalman filter - kalman_filter.py
-    _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
-    _STD_WEIGHT_VELOCITY: 10         # inverse of _std_weight_velocity
+    _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
+    _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
 
     # config for tracker - tracker.py
     MAX_IOU_DISTANCE: 0.85
-    MAX_AGE: 3
-    N_INIT: 1
+    MAX_AGE: 8
+    N_INIT: 2
