@@ -39,15 +39,20 @@ class VideoTracker(object):
         self.use_classify = args.use_classify
         self.video_flag = args.video
         self.video_path = args.VIDEO_PATH
-        self.detector = build_detector_v3(cfg)
-        self.classes = self.detector.classes
         self.track_line = []
+
+        if args.read_detect is None:
+            self.detector = build_detector_v3(cfg)
+            self.classes = self.detector.classes
+        
+        
         if os.path.basename(args.VIDEO_PATH).split('.')[1] == 'txt':
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0].rstrip("_files")
         else:
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
         self.result_filename = os.path.join(
             './logs/output', self.video_name + '_result.txt')
+
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
         self.number_MOI = cfg.CAM.NUMBER_MOI
@@ -177,6 +182,7 @@ class VideoTracker(object):
                                                           'class_id': det.cls})
                     
                     objs_dict[track.track_id]['centroid'] = centroid # update position of obj each frame
+                    objs_dict[track.track_id]['last_bbox'] = bbox
 
                     cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 2)
                     cv2.putText(image, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0,
@@ -228,7 +234,7 @@ class VideoTracker(object):
                  #if track_id not in counted object then check if centroid in range of ROI then count it
                 if len(centroid) != 0 and check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1:
                     info_obj['point_out'] = centroid
-                    if self.use_classify:
+                    if self.use_classify: # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
                         bbox = info_obj['best_bbox']
                         obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]),:] #crop obj following bbox for clf
                         class_id = self.run_classifier(clf_model, clf_labels, obj_img)
@@ -240,6 +246,12 @@ class VideoTracker(object):
                     # special class not in contest
                     if class_id == 4:
                         continue
+                    
+                    bbox = info_obj['last_bbox']
+                    obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]),:]
+                    image_folder = os.path.join(log_classify_cam_dir, "class_" + str(class_id+1))
+                    image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg' )
+                    cv2.imwrite(image_file, obj_img)
 
                     # MOI of obj
                     moi  ,_ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
@@ -263,7 +275,7 @@ class VideoTracker(object):
         return image
 
     def process(self, frame, count_frame, frame_info, encoder, tracking, tracker, objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels):
-        _frame = frame
+        _frame = np.copy(frame)
 
         # draw ROI and calibrate lines
         _frame = MOI.config_cam(_frame, self.cfg)
@@ -275,7 +287,7 @@ class VideoTracker(object):
 
         # if want to detect in path of original frame
         _frame_height, _frame_width = _frame.shape[:2]
-        cropped_frame = frame           
+        cropped_frame = np.copy(frame)        
         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
         
         print("[INFO] Detecting.....")
@@ -284,7 +296,7 @@ class VideoTracker(object):
         else:
             detections, detections_in_ROI = self.read_detection(cropped_frame, frame_info, encoder, count_frame)
         print("[INFO] Tracking....")
-        _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+        _, objs_dict = self.draw_tracking(_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
         print("[INFO] Counting....")
         _frame, arr_cnt_class, vehicles_detection_list = self.counting(count_frame, cropped_frame, _frame, \
                                                                         objs_dict, counted_obj,
@@ -488,10 +500,14 @@ def create_logs_dir():
     if not os.path.exists(log_output_dir):
         os.mkdir(log_output_dir)
 
-    return log_detected_dir, log_tracking_dir, log_output_dir
+    log_classify_dir = os.path.join('logs', 'check_classify')
+    if not os.path.exists(log_classify_dir):
+        os.mkdir(log_classify_dir)
+
+    return log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir
 
 
-def create_cam_log(cam_name, log_detected_dir, log_tracking_dir, log_output_dir):
+def create_cam_log(cam_name, log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir):
     log_detected_cam_dir = os.path.join(log_detected_dir, cam_name)
     if not os.path.exists(log_detected_cam_dir):
         os.mkdir(log_detected_cam_dir)
@@ -504,7 +520,18 @@ def create_cam_log(cam_name, log_detected_dir, log_tracking_dir, log_output_dir)
     if not os.path.exists(log_output_cam_dir):
         os.mkdir(log_output_cam_dir)
 
-    return log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir
+    log_classify_cam_dir = os.path.join(log_classify_dir, cam_name)
+    if not os.path.exists(log_classify_cam_dir):
+        os.mkdir(log_classify_cam_dir)
+    for i in range(4):
+        
+        folder_clf_class = os.path.join(log_classify_cam_dir, "class_" + str(i+1))
+        print(folder_clf_class)
+        if not os.path.exists(folder_clf_class):
+            os.mkdir(folder_clf_class)
+            print('************99999999999997777777777777')
+
+    return log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir, log_classify_cam_dir
 
 
 def parse_args():
@@ -535,11 +562,11 @@ if __name__ == '__main__':
     cfg.merge_from_file(args.config_classifier)
 
     # create dir/subdir logs
-    log_detected_dir, log_tracking_dir, log_output_dir = create_logs_dir()
+    log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir = create_logs_dir()
 
     # create dir cam log
-    log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir = create_cam_log(cfg.CAM.NAME,
-                                                                                log_detected_dir, log_tracking_dir, log_output_dir)
+    log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir, log_classify_cam_dir = create_cam_log(cfg.CAM.NAME,
+                                                                log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir)
 
     video_tracker = VideoTracker(cfg, args)
 
