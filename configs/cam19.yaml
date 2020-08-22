@@ -2,8 +2,21 @@ CAM:
   NAME: "CAM_19"
   NUMBER_MOI: 2
   ROI_DEFAULT: [[131, 307], [605, 148], [941, 249], [885, 691]]
-  TRACKING_ROI: [[30, 307], [605, 80], [1000, 170],[885, 719], [700, 719]]
+  TRACKING_ROI: [[54, 344], [605, 148], [706,195], [810,167], [916,197], [941,249],[885,691],[414,451],[341,508]]
   # MOI1: [[549, 144], [297, 505]]
   # MOI2: [[925, 487], [715, 144]]
+  # ROI_MOI1: [[130, 310], [425, 460], [333, 530], [2, 370]]
+  # ROI_MOI2: [[750, 190], [780, 175], [950, 215], [940, 250]]
+  # ROI_MOI: [[[130, 310], [425, 460], [333, 530], [2, 370]], [[750, 190], [780, 175], [950, 215], [940, 250]]]
   LINE1: [[207, 279], [462, 412]]
   LINE2: [[748, 214], [937, 278]]
+  LINE: [[[207, 279], [462, 412]], [[748, 214], [937, 278]]]
+
+  # for kalman filter - kalman_filter.py
+  _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
+  _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
+
+  # config for tracker - tracker.py
+  MAX_IOU_DISTANCE: 0.85
+  MAX_AGE: 8
+  N_INIT: 2

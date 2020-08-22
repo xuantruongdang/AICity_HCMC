@@ -2,7 +2,17 @@ CAM:
   NAME: "CAM_12"
   NUMBER_MOI: 1
   ROI_DEFAULT: [[134, 596], [650, 355], [1211, 431], [1199, 719]]
-  TRACKING_ROI: [[1, 579], [652, 302], [1215, 379],[1203, 717], [1, 716]]
+  TRACKING_ROI: [[134, 596], [652, 302], [1215, 379],[1199, 719]]
   # MOI1: [[549, 144], [297, 505]]
   # MOI2: [[925, 487], [715, 144]]
-  LINE1: [[396, 423], [1207, 574]]
+  LINE1: [[581,388], [1207, 488]]
+  LINE: [[[581,388], [1207, 488]]]
+  
+  # for kalman filter - kalman_filter.py
+  _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
+  _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
+
+  # config for tracker - tracker.py
+  MAX_IOU_DISTANCE: 0.85
+  MAX_AGE: 8
+  N_INIT: 2
