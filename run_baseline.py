@@ -52,7 +52,7 @@ class VideoTracker(object):
         self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
         self.number_MOI = cfg.CAM.NUMBER_MOI
 
-    def run_detection(self, image, encoder, tracking, frame_id):
+    def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
@@ -87,6 +87,51 @@ class VideoTracker(object):
                     f.write("{} {} {} {} {} {}\n".format(int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]),
                                                          round(det.confidence * 100, 2), cls))
 
+        print("-----------------")
+        # return detections_in_ROI
+        return detections, detections_in_ROI
+
+    def read_detection(self, image, frame_info, encoder, frame_id):
+        detect_folder_path = self.args.read_detect
+        detect_file_path = os.path.join(detect_folder_path, frame_info + ".txt")
+
+        detect_file = open(detect_file_path, 'r')          # file text store path to each frame
+        lines = detect_file.readlines()
+
+        boxes = []
+        confidence = []
+        classes = []
+
+        for line in lines:
+            detect = line.split()
+
+            bbox = [int(detect[0]), int(detect[1]), int(detect[2]), int(detect[3])]
+            score = float(detect[4])
+            class_id = int(detect[5])
+
+            boxes.append(bbox)
+            confidence.append(score)
+            classes.append(class_id)
+
+        features = encoder(image, boxes)
+        detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
+                          zip(boxes, confidence, classes, features)]
+
+        # Run non-maxima suppression.
+        boxes = np.array([d.tlwh for d in detections])
+        scores = np.array([d.confidence for d in detections])
+        indices = preprocessing.non_max_suppression(
+            boxes, self.cfg.DEEPSORT.NMS_MAX_OVERLAP, scores)
+        detections = [detections[i] for i in indices]
+        detections_in_ROI = []
+
+        print("[INFO] detected: ", len(detections))
+        for det in detections:
+            bbox = det.to_tlbr()
+            centroid_det = (int((bbox[0] + bbox[2])//2), int((bbox[1] + bbox[3])//2))
+            if check_in_polygon(centroid_det, self.TRACKING_ROI):
+                detections_in_ROI.append(det)
+        print("[INFO] detections in ROI: ", len(detections_in_ROI))
         print("-----------------")
         # return detections_in_ROI
         return detections, detections_in_ROI
@@ -217,7 +262,7 @@ class VideoTracker(object):
 
         return image
 
-    def process(self, frame, count_frame, encoder, tracking, tracker, objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels):
+    def process(self, frame, count_frame, frame_info, encoder, tracking, tracker, objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels):
         _frame = frame
 
         # draw ROI and calibrate lines
@@ -234,7 +279,10 @@ class VideoTracker(object):
         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2) 
         
         print("[INFO] Detecting.....")
-        detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, tracking, count_frame)
+        if self.args.read_detect is None:
+            detections, detections_in_ROI = self.run_detection(cropped_frame, encoder, count_frame)
+        else:
+            detections, detections_in_ROI = self.read_detection(cropped_frame, frame_info, encoder, count_frame)
         print("[INFO] Tracking....")
         _, objs_dict = self.draw_tracking(cropped_frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
         print("[INFO] Counting....")
@@ -307,10 +355,12 @@ class VideoTracker(object):
             if ret != True:
                 break
 
+            frame_info = self.video_name + "_" + str(count_frame - 1)
+
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+            _frame = self.process(frame, count_frame, frame_info, encoder, tracking, tracker,
                                     objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             # visualize
@@ -373,7 +423,7 @@ class VideoTracker(object):
         count_frame = 0
         objs_dict = {}
 
-        path_file = open(self.video_path, 'r')
+        path_file = open(self.video_path, 'r')          # file text store path to each frame
         lines = path_file.readlines()
         txt_name = os.path.basename(self.video_path)
         farther_path = self.video_path.rstrip(txt_name)
@@ -388,10 +438,12 @@ class VideoTracker(object):
             print(img_path)
             frame = cv2.imread(img_path)
 
+            frame_info = os.path.basename(img_path).split('.')[0]
+
             t1 = time.time()
             # frame = cv2.flip(frame, -1)
 
-            _frame = self.process(frame, count_frame, encoder, tracking, tracker,
+            _frame = self.process(frame, count_frame, frame_info, encoder, tracking, tracker,
                                     objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
             out.write(_frame)
@@ -465,6 +517,7 @@ def parse_args():
     parser.add_argument("--config_classifier", type=str, default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
+    parser.add_argument("--read_detect", type=str, default=None)
 
     return parser.parse_args()
 
@@ -486,9 +539,10 @@ if __name__ == '__main__':
 
     # create dir cam log
     log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir = create_cam_log(cfg.CAM.NAME,
-                                                                                    log_detected_dir, log_tracking_dir, log_output_dir)
+                                                                                log_detected_dir, log_tracking_dir, log_output_dir)
 
     video_tracker = VideoTracker(cfg, args)
+
     print('args.video: ',args.video)
     if args.video:
         print('*****in video-mode*****')
