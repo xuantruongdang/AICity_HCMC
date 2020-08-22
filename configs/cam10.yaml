@@ -20,10 +20,10 @@ CAM:
   LINE: [[[185, 632], [549, 631]], [[690, 267], [895, 266]], [[293, 225], [353, 320]], [[608, 263], [665, 313]], [[800, 580], [685, 696]], [[3, 654], [218, 575]], [[1091, 419], [1210, 470]], [[654, 398], [676, 499]], [[914, 318], [975, 275]], [[603, 283], [639, 227]], [[681, 303], [694, 400]], [[675, 513], [768, 590]]]
 
   # for kalman filter - kalman_filter.py
-  _STD_WEIGHT_POSITION: 30         # inverse of _std_weight_position
-  _STD_WEIGHT_VELOCITY: 10         # inverse of _std_weight_velocity
+  _STD_WEIGHT_POSITION: 12          # inverse of _std_weight_position
+  _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
 
   # config for tracker - tracker.py
   MAX_IOU_DISTANCE: 0.85
-  MAX_AGE: 3
-  N_INIT: 1
+  MAX_AGE: 8
+  N_INIT: 2
