@@ -290,7 +290,7 @@ class VideoTracker(object):
             print('class id: ', track_id)
             print('intersect area scale: ', intersect_area_scale)
 
-            if intersect_area_scale < 0.5 and info_obj['flag_in_out'] == 1:
+            if intersect_area_scale < self.cfg.CAM.THRESHOLD_AREA and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
 
                 if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!

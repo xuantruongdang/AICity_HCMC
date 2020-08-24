@@ -20,3 +20,6 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 8
   N_INIT: 2
+
+  # for counting base on area intersect
+  THRESHOLD_AREA: 0.5
