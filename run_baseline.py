@@ -251,15 +251,15 @@ class VideoTracker(object):
                 if class_id == 4:
                     continue
 
-                bbox = info_obj['last_bbox']
-                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
-                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                try:
-                    cv2.imwrite(image_file, obj_img)
-                except:
-                    print("Something went wrong at line 260")
+                # bbox = info_obj['last_bbox']
+                # obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
+                # image_folder = os.path.join(
+                #     log_classify_cam_dir, "class_" + str(class_id+1))
+                # image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
+                # try:
+                #     cv2.imwrite(image_file, obj_img)
+                # except:
+                #     print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
@@ -316,7 +316,10 @@ class VideoTracker(object):
                 image_folder = os.path.join(
                     log_classify_cam_dir, "class_" + str(class_id+1))
                 image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                cv2.imwrite(image_file, obj_img)
+                try:
+                    cv2.imwrite(image_file, obj_img)
+                except:
+                    print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
