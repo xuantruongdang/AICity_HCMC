@@ -1,5 +1,6 @@
 # vim: expandtab:ts=4:sw=4
 import cv2
+from shapely.geometry import Point, Polygon, shape, box
 
 class TrackState:
     """
@@ -63,14 +64,19 @@ class Track:
 
     """
 
-    def __init__(self, mean, covariance, track_id, n_init, max_age,
-                 feature=None):
+    def __init__(self, cfg, mean, covariance, track_id, n_init, max_age,
+                 det_confidence, det_class, det_best_bbox, feature=None):
+        self.cfg = cfg
         self.mean = mean
         self.covariance = covariance
         self.track_id = track_id
         self.hits = 1
         self.age = 1
         self.time_since_update = 0
+
+        self.det_confidence = det_confidence
+        self.det_class = det_class
+        self.det_best_bbox = det_best_bbox
 
         self.state = TrackState.Tentative
         self.features = []
@@ -80,6 +86,13 @@ class Track:
         self._n_init = n_init
         self._max_age = max_age
         self.track_line = []
+    
+    def area_intersect(self, bbox):
+        ROI = Polygon(self.cfg.CAM.ROI_DEFAULT)
+        obj_poly = box(minx=int(bbox[0]), miny=int(bbox[1]), maxx=int(bbox[2]), maxy=int(bbox[3]))
+        obj_area = obj_poly.area
+        intersect_area_scale = ROI.intersection(obj_poly).area / obj_area
+        return intersect_area_scale
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -139,6 +152,11 @@ class Track:
         self.mean, self.covariance = kf.update(
             self.mean, self.covariance, detection.to_xyah())
         self.features.append(detection.feature)
+
+        if detection.confidence > self.det_confidence:
+            self.det_confidence = detection.confidence
+            self.det_class = detection.cls
+            self.det_best_bbox = detection.to_tlbr()
         
         x,y,w,h = self.to_tlwh()
         center_x = int(x+w/2)
@@ -146,6 +164,9 @@ class Track:
         self.track_line.append([center_x,center_y])
         self.hits += 1
         self.time_since_update = 0
+        area_intersect = self.area_intersect(detection.to_tlbr())
+        if area_intersect < 0.1 and self.state == TrackState.Tentative:
+            self.state =TrackState.Deleted
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
         

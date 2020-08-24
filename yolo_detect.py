@@ -170,7 +170,7 @@ def parse_args():
     parser.add_argument("--video_path", type=str, default="data/cam_18.mp4")
     # parser.add_argument("--config_detection", type=str, default="./configs/yolov3.yaml")
     # parser.add_argument("--config_deepsort", type=str, default="./configs/deep_sort.yaml")
-    parser.add_argument("--config_cam", type=str, default="./configs/cam10.yaml")
+    parser.add_argument("--config_cam", type=str, default="./configs/cam18.yaml")
     # parser.add_argument("--use_classify", type=bool, default=False)
     # parser.add_argument("--config_classifier", type=str, default="./configs/mobileNet.yaml")
     # parser.add_argument("-v", "--visualize", type=bool, default=False)

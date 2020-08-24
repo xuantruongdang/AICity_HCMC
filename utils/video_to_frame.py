@@ -56,7 +56,7 @@ def video_to_frames_cv2(input_video, output_dir, cam_name):
 		vid_cap.set(cv2.CAP_PROP_POS_FRAMES, frm_id)
 		_, im = vid_cap.read()
 		path_name = os.path.join(dest_dir, cam_name + '_' + str(frm_id) + '.jpg')
-		cv2.imwrite(path_name, im)
+		#cv2.imwrite(path_name, im)
 
 		local_path = os.path.join("frames", cam_name + '_' + str(frm_id) + '.jpg')
 		local_path2 = os.path.join(cam_name, local_path)	
