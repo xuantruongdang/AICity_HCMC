@@ -158,9 +158,8 @@ class VideoTracker(object):
 
             for det in detections:
                 bbox_det = det.to_tlbr()
-                cv2.rectangle(image, (int(bbox_det[0]), int(bbox_det[1])), (int(
-                    bbox_det[2]), int(bbox_det[3])), (0, 0, 255), 2)
-
+                cv2.rectangle(image, (int(bbox_det[0]), int(bbox_det[1])), (int(bbox_det[2]), int(bbox_det[3])), (0, 0, 255), 2)
+                
             for track in tracker.tracks:
                 if not track.is_confirmed() or track.time_since_update > 1:
                     continue
@@ -190,12 +189,9 @@ class VideoTracker(object):
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
                 objs_dict[track.track_id]['last_bbox'] = bbox
 
-                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(
-                    bbox[2]), int(bbox[3])), (255, 255, 255), 2)
-                cv2.putText(image, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0,
-                            1e-3 * image.shape[0], (0, 255, 0), 1)
-                cv2.circle(
-                    image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 2)
+                cv2.putText(image, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0, 1e-3 * image.shape[0], (0, 255, 0), 1)
+                cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
                 print('objs in track list: ', tracker.get_number_obj())
                 # draw track line
@@ -458,7 +454,7 @@ class VideoTracker(object):
                 w = int(video_capture.get(3))
                 h = int(video_capture.get(4))
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter('output_yolov4.avi', fourcc, 30, (w, h))
+            out = cv2.VideoWriter('output_cam.avi', fourcc, 30, (w, h))
             frame_index = -1
 
         while True:
@@ -475,15 +471,15 @@ class VideoTracker(object):
             _frame = self.process(frame, count_frame, frame_info, encoder, tracking, tracker,
                                   objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
-            # visualize
-            if self.args.visualize:
-                _frame = imutils.resize(_frame, width=1000)
-                cv2.imshow("Final result", _frame)
-
             if writeVideo_flag:  # and not asyncVideo_flag:
                 # save a frame
                 out.write(_frame)
                 frame_index = frame_index + 1
+            
+            # visualize
+            if self.args.visualize:
+                _frame = imutils.resize(_frame, width=1000)
+                cv2.imshow("Final result", _frame)
 
             fps_imutils.update()
 
@@ -569,7 +565,6 @@ class VideoTracker(object):
             if self.args.visualize:
                 _frame = imutils.resize(_frame, width=1000)
                 cv2.imshow("Final result", _frame)
-
 
             fps_imutils.update()
 
