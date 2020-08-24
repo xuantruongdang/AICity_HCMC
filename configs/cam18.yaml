@@ -18,5 +18,8 @@ CAM:
 
   # config for tracker - tracker.py
   MAX_IOU_DISTANCE: 0.85
-  MAX_AGE: 8
-  N_INIT: 2
+  MAX_AGE: 3
+  N_INIT: 1
+
+  # for counting base on area intersect
+  THRESHOLD_AREA: 0.5

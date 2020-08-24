@@ -5,8 +5,8 @@ CAM:
   TRACKING_ROI: [[134, 596], [652, 302], [1215, 379],[1199, 719]]
   # MOI1: [[549, 144], [297, 505]]
   # MOI2: [[925, 487], [715, 144]]
-  LINE1: [[581,388], [1207, 488]]
-  LINE: [[[581,388], [1207, 488]]]
+  LINE1: [[512,417], [1200, 528]]
+  LINE: [[[512,417], [1200, 528]]]
   
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
@@ -14,5 +14,6 @@ CAM:
 
   # config for tracker - tracker.py
   MAX_IOU_DISTANCE: 0.85
-  MAX_AGE: 8
-  N_INIT: 2
+  MAX_AGE: 3
+  N_INIT: 1
+  THRESHOLD_AREA: 0.45
