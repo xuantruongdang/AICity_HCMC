@@ -24,6 +24,9 @@ def config_cam(img, cfg):
     pts = np.array(arr)
     pts1 = np.array(arr1)
 
+    color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
+                  (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
+
     # plot ROI
     cv2.drawContours(img, [pts], -1, (0, 0, 255), 2)
     cv2.drawContours(img, [pts1], -1, (0, 255, 0), 2)
@@ -39,7 +42,7 @@ def config_cam(img, cfg):
       line_endY.append (i[1][1])
       
     for i in range (len(line_startX)):
-      cv2.line(img, (line_startX[i], line_startY[i]), (line_endX[i], line_endY[i]),(random.randint(0,255), random.randint(0,255), 0))
+      cv2.line(img, (line_startX[i], line_startY[i]), (line_endX[i], line_endY[i]),color_list[i])
 
     # plot MOI
     moi = cfg.CAM.MOI
@@ -55,9 +58,7 @@ def config_cam(img, cfg):
         moi_endY.append (i[1][1])
 
     for i in range (len(moi_startX)):
-        cv2.putText(img, "MOI: {}".format(str(i+1)), (moi_startX[i], moi_startY[i] -1),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-        cv2.arrowedLine(img, (moi_startX[i], moi_startY[i]), (moi_endX[i], moi_endY[i]), (random.randint(0,255), random.randint(0,255), 0), thickness=3)
+        cv2.arrowedLine(img, (moi_startX[i], moi_startY[i]), (moi_endX[i], moi_endY[i]), color_list[i], thickness=2, tipLength=0.03)
 
 
 
