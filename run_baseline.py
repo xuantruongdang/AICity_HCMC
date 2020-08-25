@@ -225,6 +225,8 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
 
@@ -248,23 +250,22 @@ class VideoTracker(object):
                 if class_id == 4:
                     continue
 
-                # bbox = info_obj['last_bbox']
-                # obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                # image_folder = os.path.join(
-                #     log_classify_cam_dir, "class_" + str(class_id+1))
-                # image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                # try:
-                #     cv2.imwrite(image_file, obj_img)
-                # except:
-                #     print("Something went wrong at line 260")
+                bbox = info_obj['last_bbox']
+                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
+                image_folder = os.path.join(
+                    log_classify_cam_dir, "class_" + str(class_id+1))
+                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
+                try:
+                    cv2.imwrite(image_file, obj_img)
+                except:
+                    print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
                 # draw visual
-                bbox = info_obj['best_bbox']
-                cv2.putText(image, "Class: {}".format(str(class_id + 1)), (bbox[0], bbox[1]-5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 1)
+                cv2.putText(_frame, "Class: {}".format(str(class_id + 1)), (int(bbox[0]), int(bbox[1]-5)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
@@ -465,7 +466,7 @@ class VideoTracker(object):
                 w = int(video_capture.get(3))
                 h = int(video_capture.get(4))
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter('output_cam.avi', fourcc, 30, (w, h))
+            out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (w, h))
             frame_index = -1
 
         while True:
@@ -657,7 +658,7 @@ def parse_args():
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default='None')
-    parser.add_argument("--base_area", type=bool, default=True)
+    parser.add_argument("--base_area", type=bool, default=False)
 
     return parser.parse_args()
 

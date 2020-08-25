@@ -86,6 +86,12 @@ class Track:
         self._n_init = n_init
         self._max_age = max_age
         self.track_line = []
+
+    def check_in_polygon(self, center_point, polygon):
+        pts = Point(center_point[0], center_point[1])
+        if polygon.contains(pts):
+            return True
+        return False
     
     def area_intersect(self, bbox):
         ROI = Polygon(self.cfg.CAM.ROI_DEFAULT)
@@ -164,9 +170,15 @@ class Track:
         self.track_line.append([center_x,center_y])
         self.hits += 1
         self.time_since_update = 0
-        area_intersect = self.area_intersect(detection.to_tlbr())
-        if area_intersect < 0.1 and self.state == TrackState.Tentative:
+
+        x,y,w,h = detection.tlwh
+        centroid_x = int(x+w/2)
+        centroid_y = int(y+h/2)
+        # area_intersect = self.area_intersect(detection.to_tlbr())
+        if self.check_in_polygon((centroid_x, centroid_y), Polygon(self.cfg.CAM.ROI_DEFAULT)) == False and self.state == TrackState.Tentative:
             self.state =TrackState.Deleted
+        # if area_intersect < 0.1 and self.state == TrackState.Tentative:
+        #     self.state =TrackState.Deleted
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
         
