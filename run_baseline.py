@@ -26,7 +26,7 @@ from utils.parser import get_config
 from utils.utils import check_in_polygon, check_number_MOI, init_board, write_board
 
 from src.detect import build_detector_v3
-from src.classify import mobileNet
+# from src.classify import mobileNet
 from videocaptureasync import VideoCaptureAsync
 
 
@@ -207,11 +207,11 @@ class VideoTracker(object):
         print("----------------")
         return image, objs_dict
 
-    def run_classifier(self, clf_model, clf_labels, obj_img):
-        if len(obj_img) == 0:
-            return -1
-        class_id = mobileNet.predict_from_model(obj_img, clf_model, clf_labels)
-        return int(class_id)
+    # def run_classifier(self, clf_model, clf_labels, obj_img):
+    #     if len(obj_img) == 0:
+    #         return -1
+    #     class_id = mobileNet.predict_from_model(obj_img, clf_model, clf_labels)
+    #     return int(class_id)
 
     # def compare_class(self, class_id):
     #     if (class_id >= 0 and class_id <= 4):
@@ -236,26 +236,30 @@ class VideoTracker(object):
              # if track_id not in counted object then check if centroid in range of ROI then count it
             if len(centroid) != 0 and check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
-                if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
-                    bbox = info_obj['best_bbox']
-                    obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
-                    class_id = self.run_classifier(
-                        clf_model, clf_labels, obj_img)
-                    if class_id == -1:
-                        continue
-                else:
-                    class_id = info_obj['class_id']
+                # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
+                #     bbox = info_obj['best_bbox']
+                #     obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
+                #     class_id = self.run_classifier(
+                #         clf_model, clf_labels, obj_img)
+                #     if class_id == -1:
+                #         continue
+                # else:
+                #     class_id = info_obj['class_id']
+                class_id = info_obj['class_id']
 
                 # special class not in contest
                 if class_id == 4:
                     continue
 
-                bbox = info_obj['last_bbox']
-                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
-                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                #cv2.imwrite(image_file, obj_img)
+                # bbox = info_obj['last_bbox']
+                # obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
+                # image_folder = os.path.join(
+                #     log_classify_cam_dir, "class_" + str(class_id+1))
+                # image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
+                # try:
+                #     cv2.imwrite(image_file, obj_img)
+                # except:
+                #     print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
@@ -293,15 +297,16 @@ class VideoTracker(object):
             if intersect_area_scale < self.cfg.CAM.THRESHOLD_AREA and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
 
-                if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
-                    bbox = info_obj['best_bbox']
-                    obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
-                    class_id = self.run_classifier(
-                        clf_model, clf_labels, obj_img)
-                    if class_id == -1:
-                        continue
-                else:
-                    class_id = info_obj['class_id']
+                # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
+                #     bbox = info_obj['best_bbox']
+                #     obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
+                #     class_id = self.run_classifier(
+                #         clf_model, clf_labels, obj_img)
+                #     if class_id == -1:
+                #         continue
+                # else:
+                #     class_id = info_obj['class_id']
+                class_id = info_obj['class_id']
                 # special class not in contest
                 if class_id == 4:
                     continue
@@ -311,7 +316,10 @@ class VideoTracker(object):
                 image_folder = os.path.join(
                     log_classify_cam_dir, "class_" + str(class_id+1))
                 image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                #cv2.imwrite(image_file, obj_img)
+                try:
+                    cv2.imwrite(image_file, obj_img)
+                except:
+                    print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
@@ -410,8 +418,8 @@ class VideoTracker(object):
         # init for classify module
         clf_model = None
         clf_labels = None
-        if self.use_classify:
-            clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
+        # if self.use_classify:
+        #     clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
 
         encoder = gdet.create_box_encoder(
             self.cfg.DEEPSORT.MODEL, batch_size=4)
@@ -504,8 +512,8 @@ class VideoTracker(object):
         # init for classify module
         clf_model = None
         clf_labels = None
-        if self.use_classify:
-            clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
+        # if self.use_classify:
+        #     clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
 
         encoder = gdet.create_box_encoder(
             self.cfg.DEEPSORT.MODEL, batch_size=4)
@@ -636,7 +644,7 @@ def parse_args():
     parser.add_argument("--config_deepsort", type=str,
                         default="./configs/deep_sort.yaml")
     parser.add_argument("--config_cam", type=str,
-                        default="./configs/cam14.yaml")
+                        default="./configs/cam25.yaml")
     parser.add_argument("--use_classify", type=bool, default=False)
     parser.add_argument("--config_classifier", type=str,
                         default="./configs/mobileNet.yaml")
