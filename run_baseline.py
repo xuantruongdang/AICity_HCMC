@@ -265,7 +265,7 @@ class VideoTracker(object):
 
                 # draw visual
                 cv2.putText(_frame, "Class: {}".format(str(class_id + 1)), (int(bbox[0]), int(bbox[1]-5)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 3)
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
