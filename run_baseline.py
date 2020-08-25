@@ -42,7 +42,7 @@ class VideoTracker(object):
         self.video_path = args.VIDEO_PATH
         self.track_line = []
 
-        if args.read_detect is None:
+        if args.read_detect == 'None':
             self.detector = build_detector_v3(cfg)
             self.classes = self.detector.classes
 
@@ -61,6 +61,7 @@ class VideoTracker(object):
 
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
+        print("[INFO] len boxes: ", len(boxes))
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
                       zip(boxes, confidence, classes, features)]
@@ -260,6 +261,11 @@ class VideoTracker(object):
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
+                # draw visual
+                bbox = info_obj['best_bbox']
+                cv2.putText(image, "Class: {}".format(str(class_id + 1)), (bbox[0], bbox[1]-5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 1)
+
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
@@ -308,6 +314,11 @@ class VideoTracker(object):
                     continue
 
                 bbox = info_obj['last_bbox']
+                # draw visual
+                cv2.putText(_frame, "Class: {}".format(str(class_id + 1)), (int(bbox[0]), int(bbox[1]-5)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+                
+
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
                     log_classify_cam_dir, "class_" + str(class_id+1))
@@ -374,16 +385,16 @@ class VideoTracker(object):
         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2)
 
         print("[INFO] Detecting.....")
-        if self.args.read_detect is None:
+        if self.args.read_detect == 'None':
             detections, detections_in_ROI = self.run_detection(
                 cropped_frame, encoder, count_frame)
         else:
+            print("[INFO] use model")
             detections, detections_in_ROI = self.read_detection(
                 cropped_frame, frame_info, encoder, count_frame)
 
         print("[INFO] Tracking....")
         _, objs_dict = self.draw_tracking(
-
             _frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
         print("[INFO] Counting....")
         if self.args.base_area:
@@ -645,7 +656,7 @@ def parse_args():
                         default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
-    parser.add_argument("--read_detect", type=str, default=None)
+    parser.add_argument("--read_detect", type=str, default='None')
     parser.add_argument("--base_area", type=bool, default=True)
 
     return parser.parse_args()
