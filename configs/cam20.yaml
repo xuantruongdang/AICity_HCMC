@@ -28,4 +28,8 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
+<<<<<<< HEAD
   #THRESHOLD_AREA: 0.35
+=======
+  THRESHOLD_AREA: 0.2
+>>>>>>> master

@@ -42,7 +42,7 @@ class VideoTracker(object):
         self.video_path = args.VIDEO_PATH
         self.track_line = []
 
-        if args.read_detect is None:
+        if args.read_detect == 'None':
             self.detector = build_detector_v3(cfg)
             self.classes = self.detector.classes
 
@@ -61,6 +61,7 @@ class VideoTracker(object):
 
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
+        print("[INFO] len boxes: ", len(boxes))
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
                       zip(boxes, confidence, classes, features)]
@@ -158,9 +159,8 @@ class VideoTracker(object):
 
             for det in detections:
                 bbox_det = det.to_tlbr()
-                cv2.rectangle(image, (int(bbox_det[0]), int(bbox_det[1])), (int(
-                    bbox_det[2]), int(bbox_det[3])), (0, 0, 255), 2)
-
+                cv2.rectangle(image, (int(bbox_det[0]), int(bbox_det[1])), (int(bbox_det[2]), int(bbox_det[3])), (0, 0, 255), 2)
+                
             for track in tracker.tracks:
                 if not track.is_confirmed() or track.time_since_update > 1:
                     continue
@@ -190,12 +190,9 @@ class VideoTracker(object):
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
                 objs_dict[track.track_id]['last_bbox'] = bbox
 
-                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(
-                    bbox[2]), int(bbox[3])), (255, 255, 255), 2)
-                cv2.putText(image, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0,
-                            1e-3 * image.shape[0], (0, 255, 0), 1)
-                cv2.circle(
-                    image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 2)
+                cv2.putText(image, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0, 1e-3 * image.shape[0], (0, 255, 0), 1)
+                cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
                 print('objs in track list: ', tracker.get_number_obj())
                 # draw track line
@@ -228,6 +225,8 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
 
@@ -251,18 +250,22 @@ class VideoTracker(object):
                 if class_id == 4:
                     continue
 
-                # bbox = info_obj['last_bbox']
-                # obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                # image_folder = os.path.join(
-                #     log_classify_cam_dir, "class_" + str(class_id+1))
-                # image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                # try:
-                #     cv2.imwrite(image_file, obj_img)
-                # except:
-                #     print("Something went wrong at line 260")
+                bbox = info_obj['last_bbox']
+                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
+                image_folder = os.path.join(
+                    log_classify_cam_dir, "class_" + str(class_id+1))
+                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
+                try:
+                    cv2.imwrite(image_file, obj_img)
+                except:
+                    print("Something went wrong at line 260")
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+
+                # draw visual
+                cv2.putText(_frame, "Class: {}".format(str(class_id + 1)), (int(bbox[0]), int(bbox[1]-5)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 3)
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
@@ -312,6 +315,11 @@ class VideoTracker(object):
                     continue
 
                 bbox = info_obj['last_bbox']
+                # draw visual
+                cv2.putText(_frame, "Class: {}".format(str(class_id + 1)), (int(bbox[0]), int(bbox[1]-5)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+                
+
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
                     log_classify_cam_dir, "class_" + str(class_id+1))
@@ -378,16 +386,16 @@ class VideoTracker(object):
         # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2)
 
         print("[INFO] Detecting.....")
-        if self.args.read_detect is None:
+        if self.args.read_detect == 'None':
             detections, detections_in_ROI = self.run_detection(
                 cropped_frame, encoder, count_frame)
         else:
+            print("[INFO] use model")
             detections, detections_in_ROI = self.read_detection(
                 cropped_frame, frame_info, encoder, count_frame)
 
         print("[INFO] Tracking....")
         _, objs_dict = self.draw_tracking(
-
             _frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
         print("[INFO] Counting....")
         if self.args.base_area:
@@ -458,7 +466,7 @@ class VideoTracker(object):
                 w = int(video_capture.get(3))
                 h = int(video_capture.get(4))
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter('output_yolov4.avi', fourcc, 30, (w, h))
+            out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (w, h))
             frame_index = -1
 
         while True:
@@ -475,15 +483,15 @@ class VideoTracker(object):
             _frame = self.process(frame, count_frame, frame_info, encoder, tracking, tracker,
                                   objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
 
-            # visualize
-            if self.args.visualize:
-                _frame = imutils.resize(_frame, width=1000)
-                cv2.imshow("Final result", _frame)
-
             if writeVideo_flag:  # and not asyncVideo_flag:
                 # save a frame
                 out.write(_frame)
                 frame_index = frame_index + 1
+            
+            # visualize
+            if self.args.visualize:
+                _frame = imutils.resize(_frame, width=1000)
+                cv2.imshow("Final result", _frame)
 
             fps_imutils.update()
 
@@ -570,7 +578,6 @@ class VideoTracker(object):
                 _frame = imutils.resize(_frame, width=1000)
                 cv2.imshow("Final result", _frame)
 
-
             fps_imutils.update()
 
             if not asyncVideo_flag:
@@ -650,8 +657,8 @@ def parse_args():
                         default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
-    parser.add_argument("--read_detect", type=str, default=None)
-    parser.add_argument("--base_area", type=bool, default=True)
+    parser.add_argument("--read_detect", type=str, default='None')
+    parser.add_argument("--base_area", type=bool, default=False)
 
     return parser.parse_args()
 

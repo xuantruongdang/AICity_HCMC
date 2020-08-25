@@ -41,6 +41,26 @@ def config_cam(img, cfg):
     for i in range (len(line_startX)):
       cv2.line(img, (line_startX[i], line_startY[i]), (line_endX[i], line_endY[i]),(random.randint(0,255), random.randint(0,255), 0))
 
+    # plot MOI
+    moi = cfg.CAM.MOI
+    moi_startX = []
+    moi_endX = []
+    moi_startY = []
+    moi_endY = []
+
+    for i in moi:
+        moi_startX.append (i[0][0])
+        moi_startY.append (i[0][1])
+        moi_endX.append (i[1][0])
+        moi_endY.append (i[1][1])
+
+    for i in range (len(moi_startX)):
+        cv2.putText(img, "MOI: {}".format(str(i+1)), (moi_startX[i], moi_startY[i] -1),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+        cv2.arrowedLine(img, (moi_startX[i], moi_startY[i]), (moi_endX[i], moi_endY[i]), (random.randint(0,255), random.randint(0,255), 0), thickness=3)
+
+
+
     # plot calibrations lines
     # line1 = cfg.CAM.LINE1
     # line2 = cfg.CAM.LINE2
