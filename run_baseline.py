@@ -342,7 +342,7 @@ class VideoTracker(object):
                 if moi > 0:
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
-                    vehicles_detection_list.append((frame_id, moi, class_id+1))
+                    vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
 
         # ROI_poly = Polygon(shell=[[1, 566], [484, 170], [756, 164], [910, 710]])
         # ROI_area = ROI_poly.area
