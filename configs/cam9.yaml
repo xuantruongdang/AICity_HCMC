@@ -1,12 +1,13 @@
 CAM:
   NAME: "CAM_09"
   NUMBER_MOI: 1
-  ROI_DEFAULT: [[238, 454], [687, 286], [1156, 306], [1262, 621]]
+  #ROI_DEFAULT: [[238, 454], [694, 284], [1156, 306], [1262, 621]]
+  ROI_DEFAULT: [[238, 454], [648, 302], [1167, 331], [1262, 621]]
   TRACKING_ROI: [[238, 454], [721, 251], [1160, 278],[1262, 621]]
   MOI1: [[655, 575], [943, 274]]
   MOI: [[[655, 575], [943, 274]]]
-  LINE1: [[637,303], [1170,346]]
-  LINE: [[[637,303], [1170,346]]]
+  LINE1: [[589,323], [1175,358]]
+  LINE: [[[589,323], [1175,358]]]
 
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
@@ -15,4 +16,7 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
-  #THRESHOLD_AREA: 0.25
+  THRESHOLD_AREA: 0.25
+  #MOI1 +6
+  FRAME_MOI1: 6
+  FRAME_MOI: [6]

@@ -7,10 +7,11 @@ CAM:
   MOI2: [[221,162],[679,209]]
   MOI3: [[910,287],[878,619]]
   MOI: [[[155,166],[596,621]],[[221,162],[679,209]],[[910,287],[878,619]]]
-  LINE1: [[92,444], [630,348]]
+
+  LINE1: [[92,444], [674,329]]
   LINE2: [[381,158], [370,216]]
   LINE3: [[682, 249], [976, 400]]
-  LINE: [[[92,444], [614,358]],[[381,158], [370,216]],[[682, 249], [976, 400]]]
+  LINE: [[[92,444], [674,329]],[[381,158], [370,216]],[[682, 249], [976, 400]]]
   
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
@@ -20,4 +21,8 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
-  #THRESHOLD_AREA: 0.35
+  THRESHOLD_AREA: 0.35
+  FRAME_MOI: 0
+  FRAME_MOI: 0
+  FRAME_MOI: 0
+  FRAME_MOI: [0,0,0]

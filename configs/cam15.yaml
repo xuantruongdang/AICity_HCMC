@@ -10,7 +10,7 @@ CAM:
   MOI5: [[1101, 554], [1179, 277]]
   MOI6: [[414, 195], [1165, 266]]
   MOI: [[[424, 201], [274, 485]], [[827, 508], [628, 178]], [[1175, 247], [644, 175]], [[1175, 254], [205, 519]], [[1101, 554], [1179, 277]], [[414, 195], [1165, 266]]]
-  
+
   LINE1: [[70, 421], [552, 406]]
   LINE2: [[555, 317], [932, 285]]
   LINE3: [[906, 185], [871, 250]]
@@ -18,7 +18,7 @@ CAM:
   LINE5: [[1111, 303], [1276, 388]]
   LINE6: [[537, 160], [553, 290]]
   LINE: [[[70, 421], [552, 406]],[[555, 317], [932, 285]],[[906, 185], [871, 250]],[[565, 350], [595, 630]],[[1111, 303], [1276, 388]],[[537, 160], [553, 290]]]
-  
+
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
   _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
@@ -27,4 +27,11 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
-  #THRESHOLD_AREA: 0.35
+  THRESHOLD_AREA: 0.2
+  FRAME_MOI1: 0 
+  FRAME_MOI2: 0
+  FRAME_MOI3: 0
+  FRAME_MOI4: 0
+  FRAME_MOI5: 0
+  FRAME_MOI6: 0
+  FRAME_MOI: [0,0,0,0,0,0]
