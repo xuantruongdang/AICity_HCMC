@@ -656,7 +656,7 @@ def parse_args():
     parser.add_argument("--config_deepsort", type=str,
                         default="./configs/deep_sort.yaml")
     parser.add_argument("--config_cam", type=str,
-                        default="./configs/cam25.yaml")
+                        default="./configs/cam6.yaml")
     parser.add_argument("--use_classify", type=bool, default=False)
     parser.add_argument("--config_classifier", type=str,
                         default="./configs/mobileNet.yaml")

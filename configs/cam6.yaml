@@ -8,9 +8,9 @@ CAM:
   MOI2: [[925, 487], [715, 144]]
   MOI: [[[549, 144], [297, 505]], [[925, 487], [715, 144]]]
 
-  LINE1: [[171,427], [506,436]]
-  LINE2: [[823,394],[543,395]]
-  LINE: [[[171,427], [506,436]], [[823,394],[543,395]]]
+  LINE1: [[88,389], [623,392]]
+  LINE2: [[926,244],[676,237]]
+  LINE: [[[88,389], [623,392]], [[926,244],[676,237]]]
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
   _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
