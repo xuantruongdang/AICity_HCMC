@@ -266,8 +266,8 @@ class VideoTracker(object):
 
                 # draw visual
                 cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 10, (255, 0, 255), -1)
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
@@ -283,7 +283,7 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
-        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1000, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
         for (track_id, info_obj) in objs_dict.items():
@@ -321,8 +321,8 @@ class VideoTracker(object):
                 bbox = info_obj['last_bbox']
                 # draw visual
                 cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 10, (255, 0, 0), -1)
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
                 
 
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
