@@ -75,13 +75,13 @@ class VideoTracker(object):
         detections_in_ROI = []
 
         print("[INFO] detected: ", len(detections))
-        for det in detections:
-            bbox = det.to_tlbr()
-            centroid_det = (int((bbox[0] + bbox[2])//2),
-                            int((bbox[1] + bbox[3])//2))
-            if check_in_polygon(centroid_det, self.TRACKING_ROI):
-                detections_in_ROI.append(det)
-        print("[INFO] detections in ROI: ", len(detections_in_ROI))
+        # for det in detections:
+        #     bbox = det.to_tlbr()
+        #     centroid_det = (int((bbox[0] + bbox[2])//2),
+        #                     int((bbox[1] + bbox[3])//2))
+        #     if check_in_polygon(centroid_det, self.TRACKING_ROI):
+        #         detections_in_ROI.append(det)
+        # print("[INFO] detections in ROI: ", len(detections_in_ROI))
         logFile = os.path.join(log_detected_cam_dir,
                                'frame_' + str(frame_id) + '.txt')
         with open(logFile, "a+") as f:
@@ -137,15 +137,15 @@ class VideoTracker(object):
         detections = [detections[i] for i in indices]
         detections_in_ROI = []
 
-        print("[INFO] detected: ", len(detections))
-        for det in detections:
-            bbox = det.to_tlbr()
-            centroid_det = (int((bbox[0] + bbox[2])//2),
-                            int((bbox[1] + bbox[3])//2))
-            if check_in_polygon(centroid_det, self.TRACKING_ROI):
-                detections_in_ROI.append(det)
-        print("[INFO] detections in ROI: ", len(detections_in_ROI))
-        print("-----------------")
+        # print("[INFO] detected: ", len(detections))
+        # for det in detections:
+        #     bbox = det.to_tlbr()
+        #     centroid_det = (int((bbox[0] + bbox[2])//2),
+        #                     int((bbox[1] + bbox[3])//2))
+        #     if check_in_polygon(centroid_det, self.TRACKING_ROI):
+        #         detections_in_ROI.append(det)
+        # print("[INFO] detections in ROI: ", len(detections_in_ROI))
+        # print("-----------------")
         # return detections_in_ROI
         return detections, detections_in_ROI
 
@@ -266,8 +266,8 @@ class VideoTracker(object):
 
                 # draw visual
                 cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 10, (255, 0, 255), -1)
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
@@ -283,7 +283,7 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
-        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1000, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
         for (track_id, info_obj) in objs_dict.items():
@@ -301,7 +301,7 @@ class VideoTracker(object):
             print('class id: ', track_id)
             print('intersect area scale: ', intersect_area_scale)
 
-            if intersect_area_scale < self.cfg.CAM.THRESHOLD_AREA and info_obj['flag_in_out'] == 1:
+            if intersect_area_scale < 0.01 and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
 
                 # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
@@ -321,8 +321,8 @@ class VideoTracker(object):
                 bbox = info_obj['last_bbox']
                 # draw visual
                 cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 10, (255, 0, 0), -1)
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
                 
 
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
@@ -401,7 +401,7 @@ class VideoTracker(object):
 
         print("[INFO] Tracking....")
         _, objs_dict = self.draw_tracking(
-            _frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+            _frame, tracker, tracking, detections, count_frame, objs_dict)
         print("[INFO] Counting....")
         if self.args.base_area:
             _frame, arr_cnt_class, vehicles_detection_list = self.counting_base_area(count_frame, cropped_frame, _frame,
@@ -663,7 +663,7 @@ def parse_args():
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default='None')
-    parser.add_argument("--base_area", type=bool, default=False)
+    parser.add_argument("--base_area", type=bool, default=True)
 
     return parser.parse_args()
 

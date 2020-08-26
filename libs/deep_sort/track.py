@@ -171,14 +171,14 @@ class Track:
         self.hits += 1
         self.time_since_update = 0
 
-        x,y,w,h = detection.tlwh
-        centroid_x = int(x+w/2)
-        centroid_y = int(y+h/2)
-        # area_intersect = self.area_intersect(detection.to_tlbr())
-        if self.check_in_polygon((centroid_x, centroid_y), Polygon(self.cfg.CAM.ROI_DEFAULT)) == False and self.state == TrackState.Tentative:
-            self.state =TrackState.Deleted
-        # if area_intersect < 0.1 and self.state == TrackState.Tentative:
+        # x,y,w,h = detection.tlwh
+        # centroid_x = int(x+w/2)
+        # centroid_y = int(y+h/2)
+        area_intersect = self.area_intersect(detection.to_tlbr())
+        # if self.check_in_polygon((centroid_x, centroid_y), Polygon(self.cfg.CAM.ROI_DEFAULT)) == False and self.state == TrackState.Tentative:
         #     self.state =TrackState.Deleted
+        if area_intersect < 0.01 and self.state == TrackState.Tentative:
+            self.state =TrackState.Deleted
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
         
