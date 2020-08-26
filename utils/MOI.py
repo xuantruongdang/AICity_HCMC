@@ -23,7 +23,7 @@ def config_cam(img, cfg):
     line_startY = []
     line_endY = []
     pts = np.array(arr)
-    pts1 = np.array(arr1)
+    # pts1 = np.array(arr1)
     pts2 = np.array(arr2)
 
     color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
@@ -31,7 +31,7 @@ def config_cam(img, cfg):
 
     # plot ROI
     cv2.drawContours(img, [pts], -1, (0, 0, 255), 2)
-    cv2.drawContours(img, [pts1], -1, (0, 255, 0), 2)
+    # cv2.drawContours(img, [pts1], -1, (0, 255, 0), 2)
     cv2.drawContours(img, [pts2], -1, (255, 0, 0), 2)
     
     #for i in range (num_of_MOI):

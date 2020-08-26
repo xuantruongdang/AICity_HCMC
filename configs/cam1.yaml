@@ -24,4 +24,4 @@ CAM:
   # MOI1 +1 MOI2 +2
   FRAME_MOI1: 1
   FRAME_MOI2: 2
-  FRAME_MOI: [1,2]
+  FRAME_MOI: [2,2]
