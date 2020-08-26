@@ -41,6 +41,7 @@ class VideoTracker(object):
         self.video_flag = args.video
         self.video_path = args.VIDEO_PATH
         self.track_line = []
+        self.count_point = []
 
         if args.read_detect == 'None':
             self.detector = build_detector_v3(cfg)
@@ -173,7 +174,8 @@ class VideoTracker(object):
                     objs_dict.update({track.track_id: {'flag_in_out': 0,
                                                        'best_bbox': track.det_best_bbox,
                                                        'best_bboxconf': track.det_confidence,
-                                                       'class_id': track.det_class}})
+                                                       'class_id': track.det_class,
+                                                       'frame': -1}})
 
                 # get the first point(x,y) when obj move into ROI
                 if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI) and objs_dict[track.track_id]['flag_in_out'] == 0:
@@ -288,6 +290,16 @@ class VideoTracker(object):
 
         for (track_id, info_obj) in objs_dict.items():
 
+            if info_obj['frame'] == frame_id:
+                class_id = info_obj['class_id']
+                # draw visual
+                print('point out: ', info_obj['point_out'])
+                print('type: ', type(info_obj['point_out']))
+                psc = info_obj['point_out']        # point show counting
+                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
 
@@ -319,11 +331,6 @@ class VideoTracker(object):
                     continue
 
                 bbox = info_obj['last_bbox']
-                # draw visual
-                cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
-                
 
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
@@ -337,6 +344,8 @@ class VideoTracker(object):
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 counted_obj.append(int(track_id))
+
+                info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
