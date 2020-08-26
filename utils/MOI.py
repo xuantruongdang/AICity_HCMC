@@ -13,6 +13,7 @@ class Point:
 def config_cam(img, cfg):
     arr = cfg.CAM.ROI_DEFAULT
     arr1 = cfg.CAM.TRACKING_ROI
+    arr2 = cfg.CAM.ROI_BTC
     num_of_MOI = cfg.CAM.NUMBER_MOI
     
     list_moi = []
@@ -23,6 +24,7 @@ def config_cam(img, cfg):
     line_endY = []
     pts = np.array(arr)
     pts1 = np.array(arr1)
+    pts2 = np.array(arr2)
 
     color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
                   (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
@@ -30,6 +32,7 @@ def config_cam(img, cfg):
     # plot ROI
     cv2.drawContours(img, [pts], -1, (0, 0, 255), 2)
     cv2.drawContours(img, [pts1], -1, (0, 255, 0), 2)
+    cv2.drawContours(img, [pts2], -1, (255, 0, 0), 2)
     
     #for i in range (num_of_MOI):
     #  name_of_line = 'LINE'+ str(i)
