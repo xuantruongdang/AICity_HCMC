@@ -4,6 +4,7 @@ import imutils
 import argparse
 import os 
 import random 
+from sklearn.metrics.pairwise import cosine_similarity
 
 class Point: 
     def __init__(self, x, y): 
@@ -181,3 +182,26 @@ def compute_MOI(cfg, point_in, point_out):
     #     orient = orientation(line2_leftpoint, line2_rightpoint, p2)
 
     return moi, orient
+
+def compute_cosine(cfg, point_in, point_out):
+    MOI = cfg.CAM.MOI
+    cosine_results = []
+
+    # vector create by vehicle
+    vector_obj = np.array([point_out[0] - point_in[0], point_out[1] - point_in[1]])
+    vector_obj = vector_obj.reshape(1, 2)
+
+    for moi in MOI:
+        vector_moi = np.array([moi[1][0] - moi[0][0], moi[1][1] - moi[0][1]])
+        vector_moi = vector_moi.reshape(1,2)
+        cosine = cosine_similarity(vector_moi, vector_obj)
+        cosine_results.append(cosine)
+    
+    return cosine_results
+
+def compute_MOI_cosine(cfg, point_in, point_out):
+    cosine_results = compute_cosine(cfg, point_in, point_out)
+    min_cosine = np.amax(cosine_results)
+    index = np.where(cosine_results == min_cosine)
+    moi = index[0][0] + 1
+    return moi

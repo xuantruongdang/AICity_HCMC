@@ -228,7 +228,7 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
-        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1000, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
@@ -275,7 +275,7 @@ class VideoTracker(object):
                     print("Something went wrong at line 260")
 
                 # MOI of obj
-                moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                 counted_obj.append(int(track_id))
