@@ -228,7 +228,7 @@ class VideoTracker(object):
         vehicles_detection_list = []
         frame_id = count_frame
         class_id = None
-        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1050, 70),
+        cv2.putText(_frame, "Frame ID: {}".format(str(frame_id)), (1000, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
