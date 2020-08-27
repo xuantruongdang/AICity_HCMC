@@ -275,12 +275,18 @@ class VideoTracker(object):
                     print("Something went wrong at line 260")
 
                 # MOI of obj
+<<<<<<< HEAD
                 moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
+=======
+                moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                
+>>>>>>> master
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
+                    info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
@@ -352,10 +358,9 @@ class VideoTracker(object):
                 moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 counted_obj.append(int(track_id))
 
-                info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
-
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
+                    info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
