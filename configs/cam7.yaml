@@ -32,9 +32,17 @@ CAM:
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
+<<<<<<< HEAD
   THRESHOLD_AREA: 0.30
   #MOI2 +11
   FRAME_MOI1: 0
   FRAME_MOI2: 11
   FRAME_MOI: [0,11]
+=======
+  THRESHOLD_AREA: 0.20
+  #MOI1 +2
+  FRAME_MOI1: 2
+  FRAME_MOI2: 9
+  FRAME_MOI: [2,9]
+>>>>>>> master
   
