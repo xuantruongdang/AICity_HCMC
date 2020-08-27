@@ -24,6 +24,6 @@ CAM:
     THRESHOLD_AREA: 0.25
 
     #MOI2 +22
-    FRAME_MOI1: 4
-    FRAME_MOI2: 36
-    FRAME_MOI: [4,36]
+    FRAME_MOI1: 5
+    FRAME_MOI2: 33
+    FRAME_MOI: [5,33]
