@@ -17,12 +17,12 @@ def config_cam(img, cfg):
     arr2 = cfg.CAM.ROI_BTC
     num_of_MOI = cfg.CAM.NUMBER_MOI
     
-    list_moi = []
-    line = cfg.CAM.LINE
-    line_startX = []
-    line_endX = []
-    line_startY = []
-    line_endY = []
+    # list_moi = []
+    # line = cfg.CAM.LINE
+    # line_startX = []
+    # line_endX = []
+    # line_startY = []
+    # line_endY = []
     pts = np.array(arr)
     # pts1 = np.array(arr1)
     pts2 = np.array(arr2)
@@ -39,14 +39,14 @@ def config_cam(img, cfg):
     #  name_of_line = 'LINE'+ str(i)
     #  line.append (cfg.CAM.name_of_line)
 
-    for i in line:
-      line_startX.append (i[0][0])
-      line_startY.append (i[0][1])
-      line_endX.append (i[1][0])
-      line_endY.append (i[1][1])
+    # for i in line:
+    #   line_startX.append (i[0][0])
+    #   line_startY.append (i[0][1])
+    #   line_endX.append (i[1][0])
+    #   line_endY.append (i[1][1])
       
-    for i in range (len(line_startX)):
-      cv2.line(img, (line_startX[i], line_startY[i]), (line_endX[i], line_endY[i]),color_list[i])
+    # for i in range (len(line_startX)):
+    #   cv2.line(img, (line_startX[i], line_startY[i]), (line_endX[i], line_endY[i]),color_list[i])
 
     # plot MOI
     moi = cfg.CAM.MOI

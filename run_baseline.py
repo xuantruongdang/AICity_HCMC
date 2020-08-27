@@ -349,7 +349,7 @@ class VideoTracker(object):
                     print("Something went wrong at line 260")
 
                 # MOI of obj
-                moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 counted_obj.append(int(track_id))
 
                 info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
