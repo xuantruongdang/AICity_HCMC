@@ -150,12 +150,12 @@ class Tracker:
 
     def _initiate_track(self, detection):
         mean, covariance = self.kf.initiate(detection.to_xyah())
-        intersect_area_scale = self.area_intersect(detection.to_tlbr())
-        # x,y,w,h = detection.tlwh
-        # centroid_x = int(x+w/2)
-        # centroid_y = int(y+h/2)
-        if intersect_area_scale > 0:
-        # if self.check_in_polygon((centroid_x, centroid_y), Polygon(self.cfg.CAM.ROI_DEFAULT)):
+        # intersect_area_scale = self.area_intersect(detection.to_tlbr())
+        x,y,w,h = detection.tlwh
+        centroid_x = int(x+w/2)
+        centroid_y = int(y+h/2)
+        # if intersect_area_scale > 0:
+        if self.check_in_polygon((centroid_x, centroid_y), Polygon(self.cfg.CAM.ROI_DEFAULT)):
             self.tracks.append(Track(
                 self.cfg, mean, covariance, self._next_id, self.n_init, self.max_age,
                 detection.confidence, detection.cls, detection.to_tlbr(), detection.feature))

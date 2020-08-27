@@ -233,6 +233,17 @@ class VideoTracker(object):
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
 
+            if info_obj['frame'] == frame_id:
+                print('frameeeeeeeeeeeeeeeeeeeeeeeeeeeeee: ',(info_obj['frame'], frame_id))
+                class_id = info_obj['class_id']
+                # draw visual
+                print('point out: ', info_obj['point_out'])
+                print('type: ', type(info_obj['point_out']))
+                psc = info_obj['point_out']        # point show counting
+                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
+                cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
              # if track_id not in counted object then check if centroid in range of ROI then count it
@@ -265,11 +276,7 @@ class VideoTracker(object):
 
                 # MOI of obj
                 moi  , _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
-
-                # draw visual
-                cv2.putText(_frame, str(class_id + 1), (centroid[0] +8, centroid[1]),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
-                cv2.circle(_frame, (centroid[0], centroid[1]), 12, (0, 0, 200), -1)
+                info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
@@ -672,7 +679,7 @@ def parse_args():
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default='None')
-    parser.add_argument("--base_area", type=bool, default=True)
+    parser.add_argument("--base_area", type=bool, default=False)
 
     return parser.parse_args()
 
