@@ -119,8 +119,10 @@ class VideoTracker(object):
 
             xmin = int(float(detect[1]) * 1280)
             ymin = int(float(detect[2]) * 720)
-            w = int(float(detect[3]) - float(detect[1]) * 1280)
-            h = int(float(detect[4]) - float(detect[2])* 720)
+            xmax = int(float(detect[3]) * 1280)
+            ymax = int(float(detect[4]) * 720)
+            w = int(xmax - xmin)
+            h = int(ymax - ymin)
 
             bbox = [xmin, ymin, w, h]
             score = float(detect[5])
