@@ -117,10 +117,14 @@ class VideoTracker(object):
         for line in lines:
             detect = line.split()
 
-            bbox = [int(detect[0]), int(detect[1]),
-                        int(detect[2]), int(detect[3])]
-            score = float(detect[4])
-            class_id = int(detect[5])
+            xmin = int(detect[1])
+            ymin = int(detect[2])
+            w = int(detect[3]) - int(detect[1])
+            h = int(detect[4]) - int(detect[2])
+
+            bbox = [xmin, ymin, w, h]
+            score = float(detect[5])
+            class_id = int(detect[0])
 
             boxes.append(bbox)
             confidence.append(score)
