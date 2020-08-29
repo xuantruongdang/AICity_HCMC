@@ -192,7 +192,7 @@ class VideoTracker(object):
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
                 objs_dict[track.track_id]['last_bbox'] = bbox
 
-                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+40), int(bbox[1])), (255, 255, 255), -1)
+                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
                 cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
@@ -240,9 +240,9 @@ class VideoTracker(object):
                 print('point out: ', info_obj['point_out'])
                 print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
-                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
@@ -304,9 +304,9 @@ class VideoTracker(object):
                 print('point out: ', info_obj['point_out'])
                 print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
-                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
