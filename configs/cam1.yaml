@@ -25,3 +25,6 @@ CAM:
   FRAME_MOI1: 9
   FRAME_MOI2: 16
   FRAME_MOI: [9,16]
+  
+  # distance for auto estimate frame
+  DISTANCE_ROI: [40,250]
