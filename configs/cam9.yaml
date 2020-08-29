@@ -2,12 +2,12 @@ CAM:
   NAME: "CAM_09"
   NUMBER_MOI: 1
   ROI_BTC: [[238, 454], [694, 284], [1156, 306], [1262, 621]]
-  ROI_DEFAULT: [[238, 454], [597,319], [1173, 350], [1262, 621]]
+  ROI_DEFAULT: [[205, 445], [576,298], [1173, 350], [1262, 621]]
   TRACKING_ROI: [[238, 454], [721, 251], [1160, 278],[1262, 621]]
   MOI1: [[655, 575], [943, 274]]
   MOI: [[[655, 575], [943, 274]]]
-  LINE1: [[576,330], [1177,368]]
-  LINE: [[[576,330], [1177,368]]]
+  LINE1: [[564,307], [1177,368]]
+  LINE: [[[564,307], [1177,368]]]
 
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
@@ -18,5 +18,5 @@ CAM:
   N_INIT: 1
   THRESHOLD_AREA: 0.25
   #MOI1 +6
-  FRAME_MOI1: 15
-  FRAME_MOI: [15]
+  FRAME_MOI1: 6
+  FRAME_MOI: [6]
