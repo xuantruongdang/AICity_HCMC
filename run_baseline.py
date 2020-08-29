@@ -9,6 +9,7 @@ import argparse
 import os
 import shutil
 import imutils.video
+import math
 
 from shapely.geometry import Point, Polygon, shape, box
 from keras.models import model_from_json
@@ -175,13 +176,14 @@ class VideoTracker(object):
                                                        'best_bbox': track.det_best_bbox,
                                                        'best_bboxconf': track.det_confidence,
                                                        'class_id': track.det_class,
-                                                       'frame': -1}})
+                                                       'frame': -1}}) # frame when vehicle out ROI BTC (frame estimate)
 
                 # get the first point(x,y) when obj move into ROI
                 if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI) and objs_dict[track.track_id]['flag_in_out'] == 0:
                     objs_dict[track.track_id].update({'flag_in_out': 1,
                                                       'point_in': centroid,
-                                                      'point_out': None})
+                                                      'point_out': None,
+                                                      'frame_in': frame_id})
 
                 # if bbox conf of obj < bbox conf in new frame ==> update best bbox conf
                 if objs_dict[track.track_id]['best_bboxconf'] < track.det_confidence:
@@ -223,6 +225,27 @@ class VideoTracker(object):
     #     if (class_id == 8 or (class_id <= 13 and class_id > 10)):
     #         class_id = 3
     #     return class_id
+
+    def estimate_frame(self, point_in, point_out, frame_in, frame_out, moi, last_bbox):
+        distance_in_out = math.sqrt((point_out[0] - point_in[0])**2 + (point_out[1] - point_in[1])**2)
+        delta_frame = frame_out - frame_in          # a.k.a delta time
+
+        velocity = distance_in_out / delta_frame
+        acceleration = velocity / delta_frame
+
+        s = self.cfg.CAM.DISTANCE_ROI[moi -1]
+        w = int(last_bbox[2]) - int(last_bbox[0])
+        h = int(last_bbox[3]) - int(last_bbox[1])
+
+        if w > h:
+            s += w/2
+        else:
+            s += h/2
+
+        _t = (-velocity) + math.sqrt((velocity ** 2) + (2 * acceleration * s))
+        frame_estimate = _t / acceleration
+        frame_estimate = round(frame_estimate)
+        return frame_estimate
 
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
@@ -276,15 +299,20 @@ class VideoTracker(object):
 
                 # MOI of obj
                 moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
-                info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
-                    info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+                    info_obj['frame_out'] = frame_id
+                    if self.args.frame_estimate:
+                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], info_obj['frame_in'], 
+                                                                info_obj['frame_out'], moi, info_obj['last_bbox'])
+                        # print('ssssssssssssssssssssssssssssssssss', (frame_id, moi, ))
+                    else:
+                        info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
-                    vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
+                    vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
 
         print("--------------")
         return _frame, arr_cnt_class, vehicles_detection_list
@@ -682,6 +710,7 @@ def parse_args():
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default='None')
     parser.add_argument("--base_area", type=bool, default=False)
+    parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
 
     return parser.parse_args()
 
