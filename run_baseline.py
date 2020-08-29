@@ -487,7 +487,8 @@ class VideoTracker(object):
                 w = int(video_capture.get(3))
                 h = int(video_capture.get(4))
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (w, h))
+            output_camname = 'output' + '_' + self.video_name + '.avi'
+            out = cv2.VideoWriter(output_camname, fourcc, 10, (1280, 720))
             frame_index = -1
 
         while True:
@@ -554,7 +555,8 @@ class VideoTracker(object):
         asyncVideo_flag = False
 
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (1280, 720))
+        output_camname = 'output' + '_' + self.video_name + '.avi'
+        out = cv2.VideoWriter(output_camname, fourcc, 10, (1280, 720))
         frame_index = -1
 
         list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
