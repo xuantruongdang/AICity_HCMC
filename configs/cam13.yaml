@@ -7,20 +7,17 @@ CAM:
   MOI1: [[521, 152], [305, 371]]
   MOI2: [[980, 342], [808, 157]]
   MOI: [[[521, 152], [305, 371]], [[980, 342], [808, 157]]]
-
   LINE1: [[150,263], [643,253]]
   LINE2: [[655,214], [1071,203]]
   LINE: [[[150,263], [643,253]],[[655,214], [1071,203]]]
-
   # for kalman filter - kalman_filter.py
   _STD_WEIGHT_POSITION: 12         # inverse of _std_weight_position
   _STD_WEIGHT_VELOCITY: 100         # inverse of _std_weight_velocity
-
   # config for tracker - tracker.py
   MAX_IOU_DISTANCE: 0.85
   MAX_AGE: 3
   N_INIT: 1
   THRESHOLD_AREA: 0.3
   FRAME_MOI1: 11
-  FRAME_MOI2: 19
-  FRAME_MOI: [11,19]
+  FRAME_MOI2: 30
+  FRAME_MOI: [11,30]

@@ -9,6 +9,7 @@ import argparse
 import os
 import shutil
 import imutils.video
+import math
 
 from shapely.geometry import Point, Polygon, shape, box
 from keras.models import model_from_json
@@ -175,13 +176,14 @@ class VideoTracker(object):
                                                        'best_bbox': track.det_best_bbox,
                                                        'best_bboxconf': track.det_confidence,
                                                        'class_id': track.det_class,
-                                                       'frame': -1}})
+                                                       'frame': -1}}) # frame when vehicle out ROI BTC (frame estimate)
 
                 # get the first point(x,y) when obj move into ROI
                 if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI) and objs_dict[track.track_id]['flag_in_out'] == 0:
                     objs_dict[track.track_id].update({'flag_in_out': 1,
                                                       'point_in': centroid,
-                                                      'point_out': None})
+                                                      'point_out': None,
+                                                      'frame_in': frame_id})
 
                 # if bbox conf of obj < bbox conf in new frame ==> update best bbox conf
                 if objs_dict[track.track_id]['best_bboxconf'] < track.det_confidence:
@@ -192,7 +194,7 @@ class VideoTracker(object):
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
                 objs_dict[track.track_id]['last_bbox'] = bbox
 
-                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+40), int(bbox[1])), (255, 255, 255), -1)
+                cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
                 cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
@@ -224,6 +226,27 @@ class VideoTracker(object):
     #         class_id = 3
     #     return class_id
 
+    def estimate_frame(self, point_in, point_out, frame_in, frame_out, moi, last_bbox):
+        distance_in_out = math.sqrt((point_out[0] - point_in[0])**2 + (point_out[1] - point_in[1])**2)
+        delta_frame = frame_out - frame_in          # a.k.a delta time
+
+        velocity = distance_in_out / delta_frame
+        acceleration = velocity / delta_frame
+
+        s = self.cfg.CAM.DISTANCE_ROI[moi -1]
+        w = int(last_bbox[2]) - int(last_bbox[0])
+        h = int(last_bbox[3]) - int(last_bbox[1])
+
+        if w > h:
+            s += w/2
+        else:
+            s += h/2
+
+        _t = (-velocity) + math.sqrt((velocity ** 2) + (2 * acceleration * s))
+        frame_estimate = _t / acceleration
+        frame_estimate = round(frame_estimate)
+        return frame_estimate
+
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
         frame_id = count_frame
@@ -240,9 +263,9 @@ class VideoTracker(object):
                 print('point out: ', info_obj['point_out'])
                 print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
-                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
@@ -276,15 +299,20 @@ class VideoTracker(object):
 
                 # MOI of obj
                 moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
-                info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                 counted_obj.append(int(track_id))
                 #class_id = self.compare_class(class_id)
                 if moi > 0:
-                    info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+                    info_obj['frame_out'] = frame_id
+                    if self.args.frame_estimate:
+                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], info_obj['frame_in'], 
+                                                                info_obj['frame_out'], moi, info_obj['last_bbox'])
+                        # print('ssssssssssssssssssssssssssssssssss', (frame_id, moi, ))
+                    else:
+                        info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
-                    vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
+                    vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
 
         print("--------------")
         return _frame, arr_cnt_class, vehicles_detection_list
@@ -304,9 +332,9 @@ class VideoTracker(object):
                 print('point out: ', info_obj['point_out'])
                 print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
-                cv2.putText(_frame, str(class_id + 1), (int(psc[0]) +8, int(psc[1])),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 200), 2)
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
@@ -487,7 +515,8 @@ class VideoTracker(object):
                 w = int(video_capture.get(3))
                 h = int(video_capture.get(4))
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (w, h))
+            output_camname = 'output' + '_' + self.video_name + '.avi'
+            out = cv2.VideoWriter(output_camname, fourcc, 10, (1280, 720))
             frame_index = -1
 
         while True:
@@ -554,7 +583,8 @@ class VideoTracker(object):
         asyncVideo_flag = False
 
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('output_cam.avi', fourcc, 10, (1280, 720))
+        output_camname = 'output' + '_' + self.video_name + '.avi'
+        out = cv2.VideoWriter(output_camname, fourcc, 10, (1280, 720))
         frame_index = -1
 
         list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
@@ -680,6 +710,7 @@ def parse_args():
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default='None')
     parser.add_argument("--base_area", type=bool, default=False)
+    parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
 
     return parser.parse_args()
 
