@@ -271,7 +271,7 @@ class VideoTracker(object):
                 moi = info_obj['moi']
                 psc = info_obj['point_out']        # point show counting
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
-                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id) + '.' + str(moi), (int(psc[0]) -3, int(psc[1])),
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
