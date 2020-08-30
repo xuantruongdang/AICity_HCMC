@@ -67,6 +67,9 @@ class VideoTracker(object):
         self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
         self.number_MOI = cfg.CAM.NUMBER_MOI
 
+        self.color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), 
+                            (238, 180, 180), (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
+
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
         print("[INFO] len boxes: ", len(boxes))
@@ -265,9 +268,10 @@ class VideoTracker(object):
             # visualize when obj out the ROI
             if info_obj['frame'] == frame_id:
                 class_id = info_obj['class_id']
+                moi = info_obj['moi']
                 psc = info_obj['point_out']        # point show counting
-                cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
-                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
+                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id) + '.' + str(moi), (int(psc[0]) -3, int(psc[1])),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
@@ -314,6 +318,7 @@ class VideoTracker(object):
 
                 if moi > 0:
                     info_obj['frame_out'] = frame_id
+                    info_obj['moi'] = moi
 
                     if self.args.frame_estimate:
                         info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
