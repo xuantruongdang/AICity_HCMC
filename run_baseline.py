@@ -24,7 +24,7 @@ from tools import generate_detections as gdet
 
 from utils import MOI
 from utils.parser import get_config
-from utils.utils import check_in_polygon, check_number_MOI, init_board, write_board
+from utils.utils import check_in_polygon, check_number_MOI, init_board, write_board, config_cam
 
 from src.detect import build_detector_v3
 # from src.classify import mobileNet
@@ -53,8 +53,14 @@ class VideoTracker(object):
                                                0].rstrip("_files")
         else:
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
+
         self.result_filename = os.path.join(
             './logs/output', self.video_name + '_result.txt')
+
+        if args.count == "cosine":
+            self.count_method = 1
+        elif args.count == "line":
+            self.count_method = 2
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
@@ -255,13 +261,10 @@ class VideoTracker(object):
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
-
+            
+            # visualize when obj out the ROI
             if info_obj['frame'] == frame_id:
-                print('frameeeeeeeeeeeeeeeeeeeeeeeeeeeeee: ',(info_obj['frame'], frame_id))
                 class_id = info_obj['class_id']
-                # draw visual
-                print('point out: ', info_obj['point_out'])
-                print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
                 cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
@@ -269,6 +272,7 @@ class VideoTracker(object):
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
+
              # if track_id not in counted object then check if centroid in range of ROI then count it
             if len(centroid) != 0 and check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
@@ -283,11 +287,13 @@ class VideoTracker(object):
                 #     class_id = info_obj['class_id']
                 class_id = info_obj['class_id']
 
-                # special class not in contest
+                # ignore special class not in contest
                 if class_id == 4:
                     continue
 
                 bbox = info_obj['last_bbox']
+
+                # export image of counted objs to check classify
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
                     log_classify_cam_dir, "class_" + str(class_id+1))
@@ -297,19 +303,24 @@ class VideoTracker(object):
                 except:
                     print("Something went wrong at line 260")
 
-                # MOI of obj
-                moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                # compute MOI of obj
+                if self.count_method == 1:
+                    moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                elif self.count_method == 2:
+                    moi, _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
 
+                # mark objs which are counted
                 counted_obj.append(int(track_id))
-                #class_id = self.compare_class(class_id)
+
                 if moi > 0:
                     info_obj['frame_out'] = frame_id
+
                     if self.args.frame_estimate:
-                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], info_obj['frame_in'], 
-                                                                info_obj['frame_out'], moi, info_obj['last_bbox'])
-                        # print('ssssssssssssssssssssssssssssssssss', (frame_id, moi, ))
+                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
+                                                            info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
                     else:
                         info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
@@ -388,21 +399,6 @@ class VideoTracker(object):
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
 
-        # ROI_poly = Polygon(shell=[[1, 566], [484, 170], [756, 164], [910, 710]])
-        # ROI_area = ROI_poly.area
-        # obj_poly = box(minx=712, miny=99, maxx=839, maxy=187)
-        # obj_poly2 = box(minx=624, miny=218, maxx=697, maxy=256)
-        # obj_poly
-        # intersect_area_scale = ROI_poly.intersection(obj_poly2).area / obj_poly2.area
-        # print('roi area:', ROI_area)
-        # print('obj area:', obj_poly2.area)
-        # print('inersec area: ', obj_poly2.intersection(ROI_poly).area)
-        # print('intersect area: ', intersect_area_scale)
-        # plt.plot(*ROI_poly.exterior.xy)
-        # plt.plot(*obj_poly2.exterior.xy)
-        # plt.plot(*obj_poly2.intersection(ROI_poly).exterior.xy)
-        # plt.show()
-
         return _frame, arr_cnt_class, vehicles_detection_list
 
 
@@ -422,7 +418,7 @@ class VideoTracker(object):
         _frame = np.copy(frame)
 
         # draw ROI and calibrate lines
-        _frame = MOI.config_cam(_frame, self.cfg)
+        _frame = config_cam(_frame, self.cfg, self.args)
 
         # draw board
         ROI_board = np.zeros((150, 170, 3), np.int)
@@ -708,9 +704,10 @@ def parse_args():
                         default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
     parser.add_argument("--video", type=bool, default=False)
-    parser.add_argument("--read_detect", type=str, default='None')
+    parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
+    parser.add_argument("-c", "--count", type=str, default="cosine")
 
     return parser.parse_args()
 

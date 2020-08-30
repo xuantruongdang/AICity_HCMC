@@ -212,5 +212,5 @@ class Track:
           for i in range(len(self.track_line)-1):
             p1 = self.track_line[i+1]
             p2 = self.track_line[i]
-            image = cv2.line(image, (p1[0], p1[1]), (p2[0], p2[1]), (255,255,0), 3)
+            image = cv2.line(image, (p1[0], p1[1]), (p2[0], p2[1]), (255,255,0), 2)
         return image
