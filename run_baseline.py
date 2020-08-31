@@ -72,7 +72,6 @@ class VideoTracker(object):
 
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
-        print("[INFO] len boxes: ", len(boxes))
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
                       zip(boxes, confidence, classes, features)]
@@ -85,7 +84,6 @@ class VideoTracker(object):
         detections = [detections[i] for i in indices]
         detections_in_ROI = []
 
-        print("[INFO] detected: ", len(detections))
         # for det in detections:
         #     bbox = det.to_tlbr()
         #     centroid_det = (int((bbox[0] + bbox[2])//2),
@@ -165,8 +163,6 @@ class VideoTracker(object):
             # Call the tracker
             tracker.predict()
             tracker.update(detections)
-            print("[INFO] track in ROI: ", len(tracker.tracks))
-            print("[INFO] detection in ROI: ", len(detections))
 
             for det in detections:
                 bbox_det = det.to_tlbr()
@@ -208,7 +204,6 @@ class VideoTracker(object):
                 cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
-                print('objs in track list: ', tracker.get_number_obj())
                 # draw track line
                 image = track.draw_track_line(image)
 
@@ -327,7 +322,6 @@ class VideoTracker(object):
                         info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
                     arr_cnt_class[class_id][moi-1] += 1
-                    print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
 
         print("--------------")
@@ -345,8 +339,6 @@ class VideoTracker(object):
             if info_obj['frame'] == frame_id:
                 class_id = info_obj['class_id']
                 # draw visual
-                print('point out: ', info_obj['point_out'])
-                print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
                 cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
@@ -362,8 +354,6 @@ class VideoTracker(object):
             obj_area = obj_poly.area
 
             intersect_area_scale = self.polygon_ROI.intersection(obj_poly).area / obj_area
-            print('class id: ', track_id)
-            print('intersect area scale: ', intersect_area_scale)
 
             if intersect_area_scale < 0.01 and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
@@ -440,7 +430,6 @@ class VideoTracker(object):
             detections, detections_in_ROI = self.run_detection(
                 cropped_frame, encoder, count_frame)
         else:
-            print("[INFO] use model")
             detections, detections_in_ROI = self.read_detection(
                 cropped_frame, frame_info, encoder, count_frame)
 
@@ -522,6 +511,7 @@ class VideoTracker(object):
 
         while True:
             count_frame += 1
+            print('[INFO] Running on frame: ', count_frame)
             ret, frame = video_capture.read()
             if ret != True:
                 break
