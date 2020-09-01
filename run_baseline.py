@@ -298,7 +298,7 @@ class VideoTracker(object):
                 class_id = info_obj['class_id']
 
                 # ignore special class not in contest
-                if class_id == 4:
+                if class_id == 0:
                     continue
 
                 bbox = info_obj['last_bbox']
@@ -334,7 +334,7 @@ class VideoTracker(object):
 
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
-                    vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
+                    vehicles_detection_list.append((info_obj['frame'], moi, class_id))
 
         print("--------------")
         return _frame, arr_cnt_class, vehicles_detection_list
