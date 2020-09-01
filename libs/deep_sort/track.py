@@ -77,6 +77,7 @@ class Track:
         self.det_confidence = det_confidence
         self.det_class = det_class
         self.det_best_bbox = det_best_bbox
+        self.det_current_class = det_class
 
         self.state = TrackState.Tentative
         self.features = []
@@ -163,6 +164,7 @@ class Track:
             self.det_confidence = detection.confidence
             self.det_class = detection.cls
             self.det_best_bbox = detection.to_tlbr()
+        self.det_current_class = detection.cls
         
         x,y,w,h = self.to_tlwh()
         center_x = int(x+w/2)

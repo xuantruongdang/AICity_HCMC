@@ -15,6 +15,7 @@ from shapely.geometry import Point, Polygon, shape, box
 from keras.models import model_from_json
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
+from collections import Counter
 
 from libs.deep_sort import preprocessing
 from libs.deep_sort import nn_matching
@@ -73,7 +74,7 @@ class VideoTracker(object):
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
         features = encoder(image, boxes)
-        detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
+        detections = [Detection(bbox, score, cls, feature) for bbox, score, cls, feature in
                       zip(boxes, confidence, classes, features)]
 
         # Run non-maxima suppression.
@@ -135,7 +136,7 @@ class VideoTracker(object):
             classes.append(class_id)
 
         features = encoder(image, boxes)
-        detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
+        detections = [Detection(bbox, score, cls, feature) for bbox, score, cls, feature in
                       zip(boxes, confidence, classes, features)]
 
         # Run non-maxima suppression.
@@ -188,7 +189,11 @@ class VideoTracker(object):
                     objs_dict[track.track_id].update({'flag_in_out': 1,
                                                       'point_in': centroid,
                                                       'point_out': None,
-                                                      'frame_in': frame_id})
+                                                      'frame_in': frame_id,
+                                                      'list_classes': [] })
+
+                if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI):
+                    objs_dict[track.track_id]['list_classes'].append(track.det_current_class)
 
                 # if bbox conf of obj < bbox conf in new frame ==> update best bbox conf
                 if objs_dict[track.track_id]['best_bboxconf'] < track.det_confidence:
@@ -251,6 +256,10 @@ class VideoTracker(object):
         frame_estimate = round(frame_estimate)
         return frame_estimate
 
+    def most_frequent(self, List): 
+        occurence_count = Counter(List) 
+        return occurence_count.most_common(1)[0][0] 
+
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
         frame_id = count_frame
@@ -284,7 +293,9 @@ class VideoTracker(object):
                 #         continue
                 # else:
                 #     class_id = info_obj['class_id']
-                class_id = info_obj['class_id']
+                # class_id = info_obj['class_id']
+                class_id = self.most_frequent(info_obj['list_classes'])
+                info_obj['class_id'] = class_id
 
                 # ignore special class not in contest
                 if class_id == 4:
