@@ -332,7 +332,7 @@ class VideoTracker(object):
                     else:
                         info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
 
-                    arr_cnt_class[class_id][moi-1] += 1
+                    arr_cnt_class[class_id-1][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id))
 
