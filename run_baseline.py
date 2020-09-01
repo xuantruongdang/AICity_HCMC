@@ -211,7 +211,7 @@ class VideoTracker(object):
 
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
-                cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
+                cv2.putText(image,str(track.det_class) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
                 print('objs in track list: ', tracker.get_number_obj())
@@ -277,7 +277,7 @@ class VideoTracker(object):
                 moi = info_obj['moi']
                 psc = info_obj['point_out']        # point show counting
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
-                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+                cv2.putText(_frame, str(class_id) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
@@ -306,7 +306,7 @@ class VideoTracker(object):
                 # export image of counted objs to check classify
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
+                    log_classify_cam_dir, "class_" + str(class_id))
                 image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
                 try:
                     cv2.imwrite(image_file, obj_img)
