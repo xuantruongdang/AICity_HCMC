@@ -64,7 +64,7 @@ class VideoTracker(object):
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
-        self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
+        # self.TRACKING_ROI = Polygon(cfg.CAM.TRACKING_ROI)
         self.number_MOI = cfg.CAM.NUMBER_MOI
 
         self.color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), 
