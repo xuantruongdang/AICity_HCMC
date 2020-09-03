@@ -335,10 +335,10 @@ class VideoTracker(object):
                     info_obj['frame'] = info_obj['last_frame']
 
                     cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
-                    cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
+                    cv2.putText(_frame, str(class_id) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
                                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     
-                    arr_cnt_class[class_id][moi-1] += 1
+                    arr_cnt_class[class_id-1][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id))
 
