@@ -19,7 +19,7 @@ def config_cam(img, cfg, args):
     
     roi_default = np.array(cfg.CAM.ROI_DEFAULT)
     # tracking_roi = np.array(cfg.CAM.TRACKING_ROI)
-    roi_btc = np.array(cfg.CAM.ROI_BTC)
+    # roi_btc = np.array(cfg.CAM.ROI_BTC)
 
     color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
                   (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
@@ -27,7 +27,7 @@ def config_cam(img, cfg, args):
     # plot ROI
     cv2.drawContours(img, [roi_default], -1, (0, 0, 255), 2)
     # cv2.drawContours(img, [tracking_roi], -1, (0, 255, 0), 2)
-    cv2.drawContours(img, [roi_btc], -1, (255, 0, 0), 2)
+    # cv2.drawContours(img, [roi_btc], -1, (255, 0, 0), 2)
 
     # plot calibrations lines for count by line
     if args.count == "line":

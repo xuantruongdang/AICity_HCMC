@@ -86,18 +86,18 @@ class VideoTracker(object):
         detections_in_ROI = []
 
         print("[INFO] detected: ", len(detections))
-        # for det in detections:
-        #     bbox = det.to_tlbr()
-        #     centroid_det = (int((bbox[0] + bbox[2])//2),
-        #                     int((bbox[1] + bbox[3])//2))
-        #     if check_in_polygon(centroid_det, self.TRACKING_ROI):
-        #         detections_in_ROI.append(det)
+        for det in detections:
+            bbox = det.to_tlbr()
+            centroid_det = (int((bbox[0] + bbox[2])//2),
+                            int((bbox[1] + bbox[3])//2))
+            if check_in_polygon(centroid_det, self.polygon_ROI):
+                detections_in_ROI.append(det)
         # print("[INFO] detections in ROI: ", len(detections_in_ROI))
         logFile = os.path.join(log_detected_cam_dir,
                                'frame_' + str(frame_id) + '.txt')
         with open(logFile, "a+") as f:
-            # for det in detections_in_ROI:
-            for det in detections:
+            for det in detections_in_ROI:
+            # for det in detections:
                 bbox = det.to_tlbr()
                 score = "%.2f" % round(det.confidence * 100, 2) + "%"
 
@@ -149,14 +149,14 @@ class VideoTracker(object):
         detections_in_ROI = []
 
         # print("[INFO] detected: ", len(detections))
-        # for det in detections:
-        #     bbox = det.to_tlbr()
-        #     centroid_det = (int((bbox[0] + bbox[2])//2),
-        #                     int((bbox[1] + bbox[3])//2))
-        #     if check_in_polygon(centroid_det, self.TRACKING_ROI):
-        #         detections_in_ROI.append(det)
-        # print("[INFO] detections in ROI: ", len(detections_in_ROI))
-        # print("-----------------")
+        for det in detections:
+            bbox = det.to_tlbr()
+            centroid_det = (int((bbox[0] + bbox[2])//2),
+                            int((bbox[1] + bbox[3])//2))
+            if check_in_polygon(centroid_det, self.polygon_ROI):
+                detections_in_ROI.append(det)
+        print("[INFO] detections in ROI: ", len(detections_in_ROI))
+        print("-----------------")
         # return detections_in_ROI
         return detections, detections_in_ROI
 
@@ -202,6 +202,7 @@ class VideoTracker(object):
 
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
                 objs_dict[track.track_id]['last_bbox'] = bbox
+                objs_dict[track.track_id]['last_frame'] = frame_id
 
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
@@ -266,19 +267,19 @@ class VideoTracker(object):
             centroid = info_obj['centroid']
             
             # visualize when obj out the ROI
-            if info_obj['frame'] == frame_id:
-                class_id = info_obj['class_id']
-                moi = info_obj['moi']
-                psc = info_obj['point_out']        # point show counting
-                cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
-                cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            # if info_obj['frame'] == frame_id:
+            #     class_id = info_obj['class_id']
+            #     moi = info_obj['moi']
+            #     psc = info_obj['point_out']        # point show counting
+            #     cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
+            #     cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
+            #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
 
              # if track_id not in counted object then check if centroid in range of ROI then count it
-            if len(centroid) != 0 and check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1:
+            if info_obj['last_frame'] + 2 < count_frame or check_in_polygon(centroid, self.polygon_ROI) == False:
                 info_obj['point_out'] = centroid
                 # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
                 #     bbox = info_obj['best_bbox']
@@ -317,15 +318,20 @@ class VideoTracker(object):
                 counted_obj.append(int(track_id))
 
                 if moi > 0:
-                    info_obj['frame_out'] = frame_id
+                    # info_obj['frame_out'] = frame_id
                     info_obj['moi'] = moi
 
-                    if self.args.frame_estimate:
-                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
-                                                            info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
-                    else:
-                        info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+                    # if self.args.frame_estimate:
+                    #     info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
+                    #                                         info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
+                    # else:
+                    #     info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+                    info_obj['frame'] = info_obj['last_frame']
 
+                    cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
+                    cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
@@ -446,7 +452,8 @@ class VideoTracker(object):
 
         print("[INFO] Tracking....")
         _, objs_dict = self.draw_tracking(
-            _frame, tracker, tracking, detections, count_frame, objs_dict)
+            _frame, tracker, tracking, detections_in_ROI, count_frame, objs_dict)
+
         print("[INFO] Counting....")
         if self.args.base_area:
             _frame, arr_cnt_class, vehicles_detection_list = self.counting_base_area(count_frame, cropped_frame, _frame,
