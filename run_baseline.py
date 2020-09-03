@@ -285,7 +285,7 @@ class VideoTracker(object):
                 continue
 
              # if track_id not in counted object then check if centroid in range of ROI then count it
-            if info_obj['last_frame'] + 2 < count_frame or check_in_polygon(centroid, self.polygon_ROI) == False:
+            if (info_obj['last_frame'] + 2 < count_frame and info_obj['flag_in_out'] == 1) or (check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1):
                 info_obj['point_out'] = centroid
                 # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
                 #     bbox = info_obj['best_bbox']
