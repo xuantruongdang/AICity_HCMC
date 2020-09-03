@@ -326,7 +326,11 @@ class VideoTracker(object):
                 if moi > 0:
                     # info_obj['frame_out'] = frame_id
                     info_obj['moi'] = moi
-
+                    track_distance = math.sqrt((info_obj['point_out'][0] - info_obj['point_in'][0]) ** 2 + (info_obj['point_out'][1] - info_obj['point_in'][1]) ** 2)
+                    
+                    if track_distance < self.cfg.CAM.D_THRESHOLD[moi-1]:
+                        continue
+                    
                     # if self.args.frame_estimate:
                     #     info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
                     #                                         info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
