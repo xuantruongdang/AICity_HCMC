@@ -78,15 +78,16 @@ def compute_MOI(cfg, point_in, point_out):
 
     moi = -1
     orient = None
-
+    count = 0
     # Vector V has first point p2 and last point q2: present the movement of vehicle
     # if V intersect line1, MOI = 1
     for i in range (len (line_leftpoint)):
       if (doIntersect(line_leftpoint[i], line_rightpoint[i], p2, q2)):
         moi = i + 1
         orient = orientation (line_leftpoint[i], line_rightpoint[i], p2)
+        count += 1
 
-    return moi, orient
+    return moi, orient, count
 
 def compute_cosine(cfg, point_in, point_out):
     MOI = cfg.CAM.MOI

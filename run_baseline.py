@@ -61,6 +61,8 @@ class VideoTracker(object):
             self.count_method = 1
         elif args.count == "line":
             self.count_method = 2
+        elif args.count == "cosine-line":
+            self.count_method = 3
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
@@ -312,8 +314,12 @@ class VideoTracker(object):
                 if self.count_method == 1:
                     moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 elif self.count_method == 2:
-                    moi, _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
-
+                    moi, _, _ = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                elif self.count_method == 3:
+                    moi, _, count = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                    if count == 0 or count > 1:
+                        moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                
                 # mark objs which are counted
                 counted_obj.append(int(track_id))
 
@@ -723,7 +729,7 @@ def parse_args():
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
-    parser.add_argument("-c", "--count", type=str, default="cosine")
+    parser.add_argument("-c", "--count", type=str, default="cosine-line")
 
     return parser.parse_args()
 
