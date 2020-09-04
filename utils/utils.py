@@ -30,7 +30,7 @@ def config_cam(img, cfg, args):
     # cv2.drawContours(img, [roi_btc], -1, (255, 0, 0), 2)
 
     # plot calibrations lines for count by line
-    if args.count == "line":
+    if args.count == "line" or args.count == "cosine-line":
         for i in line:
             line_startX.append (i[0][0])
             line_startY.append (i[0][1])
