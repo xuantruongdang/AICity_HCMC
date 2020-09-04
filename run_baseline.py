@@ -61,8 +61,6 @@ class VideoTracker(object):
             self.count_method = 1
         elif args.count == "line":
             self.count_method = 2
-        elif args.count == "cosine-line":
-            self.count_method = 3
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
@@ -129,10 +127,16 @@ class VideoTracker(object):
         for line in lines:
             detect = line.split()
 
-            bbox = [int(detect[0]), int(detect[1]),
-                        int(detect[2]), int(detect[3])]
-            score = float(detect[4])
-            class_id = int(detect[5])
+            xmin = int(float(detect[1]) * 1280)
+            ymin = int(float(detect[2]) * 720)
+            xmax = int(float(detect[3]) * 1280)
+            ymax = int(float(detect[4]) * 720)
+            w = int(xmax - xmin)
+            h = int(ymax - ymin)
+
+            bbox = [xmin, ymin, w, h]
+            score = float(detect[5])
+            class_id = int(detect[0])
 
             boxes.append(bbox)
             confidence.append(score)
@@ -208,7 +212,7 @@ class VideoTracker(object):
 
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
-                cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
+                cv2.putText(image,str(track.det_class) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
                 print('objs in track list: ', tracker.get_number_obj())
@@ -295,7 +299,7 @@ class VideoTracker(object):
                 class_id = info_obj['class_id']
 
                 # ignore special class not in contest
-                if class_id == 4:
+                if class_id == 0:
                     continue
 
                 bbox = info_obj['last_bbox']
@@ -303,7 +307,7 @@ class VideoTracker(object):
                 # export image of counted objs to check classify
                 obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
                 image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
+                    log_classify_cam_dir, "class_" + str(class_id))
                 image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
                 try:
                     cv2.imwrite(image_file, obj_img)
@@ -319,7 +323,7 @@ class VideoTracker(object):
                     moi, _, count = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
                     if count == 0 or count > 1:
                         moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
-                
+
                 # mark objs which are counted
                 counted_obj.append(int(track_id))
 
@@ -339,12 +343,12 @@ class VideoTracker(object):
                     info_obj['frame'] = info_obj['last_frame']
 
                     cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
-                    cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
+                    cv2.putText(_frame, str(class_id) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
                                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     
-                    arr_cnt_class[class_id][moi-1] += 1
+                    arr_cnt_class[class_id-1][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
-                    vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
+                    vehicles_detection_list.append((info_obj['frame'], moi, class_id))
 
         print("--------------")
         return _frame, arr_cnt_class, vehicles_detection_list
@@ -729,7 +733,7 @@ def parse_args():
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
-    parser.add_argument("-c", "--count", type=str, default="cosine-line")
+    parser.add_argument("-c", "--count", type=str, default="cosine")
 
     return parser.parse_args()
 
