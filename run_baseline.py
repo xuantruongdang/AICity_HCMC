@@ -10,11 +10,14 @@ import os
 import shutil
 import imutils.video
 import math
+import matplotlib.pyplot as plt
 
+from collections import deque
 from shapely.geometry import Point, Polygon, shape, box
 from keras.models import model_from_json
 from sklearn.preprocessing import LabelEncoder
-import matplotlib.pyplot as plt
+from sympy import symbols, Eq, solve
+
 
 from libs.deep_sort import preprocessing
 from libs.deep_sort import nn_matching
@@ -187,7 +190,8 @@ class VideoTracker(object):
                                                        'best_bbox': track.det_best_bbox,
                                                        'best_bboxconf': track.det_confidence,
                                                        'class_id': track.det_class,
-                                                       'frame': -1}}) # frame when vehicle out ROI BTC (frame estimate)
+                                                       'frame': -1,
+                                                       'centroid_deque': deque([], 10) }}) # frame when vehicle out ROI BTC (frame estimate)
 
                 # get the first point(x,y) when obj move into ROI
                 if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI) and objs_dict[track.track_id]['flag_in_out'] == 0:
@@ -203,6 +207,7 @@ class VideoTracker(object):
                                                       'class_id': track.det_class})
 
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
+                objs_dict[track.track_id]['centroid_deque'].append(centroid) 
                 objs_dict[track.track_id]['last_bbox'] = bbox
                 objs_dict[track.track_id]['last_frame'] = frame_id
 
@@ -238,14 +243,32 @@ class VideoTracker(object):
     #         class_id = 3
     #     return class_id
 
-    def estimate_frame(self, point_in, point_out, frame_in, frame_out, moi, last_bbox):
-        distance_in_out = math.sqrt((point_out[0] - point_in[0])**2 + (point_out[1] - point_in[1])**2)
-        delta_frame = frame_out - frame_in          # a.k.a delta time
+    # find parameters of line equation
+    def line_equation(self, point1, point2):
+        a, b = symbols('a b')
+        eq1 = Eq(point1[0] * a + b - point1[1])
+        eq2 = Eq(point2[0] * a + b - point2[1])
 
+        result = solve((eq1,eq2), (a, b))
+        a = result[a]
+        c = result[b]
+        b = -1
+        return a, b, c
+
+    # calculate distance form centroid of obj to ROI line
+    def distance_point2roi(self, centroid, point1, point2):
+        a, b, c = self.line_equation(point1, point2)
+        d = abs((a * centroid[0] + b * centroid[1] + c)) / (math.sqrt(a * a + b * b)) 
+        return d
+
+    def estimate_frame(self, point_previous_out, point_out, moi, last_bbox, distance_point_line):
+        distance_in_out = math.sqrt((point_out[0] - point_previous_out[0])**2 + (point_out[1] - point_previous_out[1])**2)
+        delta_frame = 1          # a.k.a delta time
+        print('distance_in_outttttttttttttttt: ', distance_in_out)
         velocity = distance_in_out / delta_frame
         acceleration = velocity / delta_frame
 
-        s = self.cfg.CAM.DISTANCE_ROI[moi -1]
+        s = distance_point_line
         w = int(last_bbox[2]) - int(last_bbox[0])
         h = int(last_bbox[3]) - int(last_bbox[1])
 
@@ -283,15 +306,6 @@ class VideoTracker(object):
              # if track_id not in counted object then check if centroid in range of ROI then count it
             if (info_obj['last_frame'] + 2 < count_frame and info_obj['flag_in_out'] == 1) or (check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1):
                 info_obj['point_out'] = centroid
-                # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
-                #     bbox = info_obj['best_bbox']
-                #     obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
-                #     class_id = self.run_classifier(
-                #         clf_model, clf_labels, obj_img)
-                #     if class_id == -1:
-                #         continue
-                # else:
-                #     class_id = info_obj['class_id']
                 class_id = info_obj['class_id']
 
                 # ignore special class not in contest
@@ -324,23 +338,26 @@ class VideoTracker(object):
                 counted_obj.append(int(track_id))
 
                 if moi > 0:
-                    # info_obj['frame_out'] = frame_id
                     info_obj['moi'] = moi
                     track_distance = math.sqrt((info_obj['point_out'][0] - info_obj['point_in'][0]) ** 2 + (info_obj['point_out'][1] - info_obj['point_in'][1]) ** 2)
                     
                     if track_distance < self.cfg.CAM.D_THRESHOLD[moi-1]:
                         continue
                     
-                    # if self.args.frame_estimate:
-                    #     info_obj['frame'] = frame_id + self.estimate_frame(info_obj['point_in'], info_obj['point_out'], 
-                    #                                         info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
-                    # else:
-                    #     info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
-                    info_obj['frame'] = info_obj['last_frame']
+                    print('sadfsafsdfsadfsdfasdfasdfasdfsd: ', info_obj['centroid_deque'])
+                    if self.args.frame_estimate:
+                        distance_point_line = self.distance_point2roi(centroid, self.cfg.CAM.LINE_OUT_ROI[moi-1][0], self.cfg.CAM.LINE_OUT_ROI[moi-1][1])
+                        info_obj['frame'] = info_obj['last_frame'] + self.estimate_frame(info_obj['centroid_deque'][0], info_obj['centroid_deque'][-1], 
+                                                                moi, info_obj['last_bbox'], distance_point_line)
+                    else:
+                        # info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
+                        info_obj['frame'] = frame_id
 
-                    cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
-                    cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    # visualize when obj out the ROI
+                    if info_obj['frame'] == frame_id:
+                        cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
+                        cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     
                     arr_cnt_class[class_id][moi-1] += 1
                     print("[INFO] arr_cnt_class: \n", arr_cnt_class)
@@ -728,7 +745,7 @@ def parse_args():
     parser.add_argument("--video", type=bool, default=False)
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
-    parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
+    parser.add_argument("-f", "--frame_estimate", type=bool, default=False)
     parser.add_argument("-c", "--count", type=str, default="cosine-line")
 
     return parser.parse_args()
