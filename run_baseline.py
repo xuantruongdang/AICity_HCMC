@@ -61,6 +61,8 @@ class VideoTracker(object):
             self.count_method = 1
         elif args.count == "line":
             self.count_method = 2
+        elif args.count == "cosine-line":
+            self.count_method = 3
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
