@@ -333,7 +333,8 @@ class VideoTracker(object):
                     moi, _, count = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
                     if count == 0 or count > 1:
                         moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
-                
+                if moi != 1:
+                    continue
                 # mark objs which are counted
                 counted_obj.append(int(track_id))
 
@@ -354,9 +355,9 @@ class VideoTracker(object):
                         info_obj['frame'] = frame_id
 
                     # visualize when obj out the ROI
-                    if info_obj['frame'] == frame_id:
-                        cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
-                        cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
+                    # if info_obj['frame'] == frame_id:
+                    cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
+                    cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
                                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     
                     arr_cnt_class[class_id][moi-1] += 1
