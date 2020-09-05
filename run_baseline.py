@@ -12,7 +12,7 @@ import imutils.video
 import math
 import matplotlib.pyplot as plt
 
-from collections import deque
+from collections import deque, Counter 
 from shapely.geometry import Point, Polygon, shape, box
 from keras.models import model_from_json
 from sklearn.preprocessing import LabelEncoder
@@ -191,7 +191,8 @@ class VideoTracker(object):
                                                        'best_bboxconf': track.det_confidence,
                                                        'class_id': track.det_class,
                                                        'frame': -1,
-                                                       'centroid_deque': deque([], 10) }}) # frame when vehicle out ROI BTC (frame estimate)
+                                                       'centroid_deque': deque([], 10),
+                                                       'class_list': [] }}) # frame when vehicle out ROI BTC (frame estimate)
 
                 # get the first point(x,y) when obj move into ROI
                 if len(centroid) !=0 and check_in_polygon(centroid, self.polygon_ROI) and objs_dict[track.track_id]['flag_in_out'] == 0:
@@ -210,6 +211,7 @@ class VideoTracker(object):
                 objs_dict[track.track_id]['centroid_deque'].append(centroid) 
                 objs_dict[track.track_id]['last_bbox'] = bbox
                 objs_dict[track.track_id]['last_frame'] = frame_id
+                objs_dict[track.track_id]['class_list'].append(track.det_class)
 
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])-15), (int(bbox[0]+50), int(bbox[1])), (255, 255, 255), -1)
                 cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 255), 1)
@@ -282,6 +284,10 @@ class VideoTracker(object):
         frame_estimate = round(frame_estimate)
         return frame_estimate
 
+    def voting_class(self, class_list):
+        occurence_count = Counter(class_list) 
+        return occurence_count.most_common(1)[0][0]
+
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
         frame_id = count_frame
@@ -306,7 +312,7 @@ class VideoTracker(object):
              # if track_id not in counted object then check if centroid in range of ROI then count it
             if (info_obj['last_frame'] + 2 < count_frame and info_obj['flag_in_out'] == 1) or (check_in_polygon(centroid, self.polygon_ROI) == False and info_obj['flag_in_out'] == 1):
                 info_obj['point_out'] = centroid
-                class_id = info_obj['class_id']
+                class_id = self.voting_class(info_obj['class_list'])
 
                 # ignore special class not in contest
                 if class_id == 4:
@@ -344,7 +350,6 @@ class VideoTracker(object):
                     if track_distance < self.cfg.CAM.D_THRESHOLD[moi-1]:
                         continue
                     
-                    print('sadfsafsdfsadfsdfasdfasdfasdfsd: ', info_obj['centroid_deque'])
                     if self.args.frame_estimate:
                         distance_point_line = self.distance_point2roi(centroid, self.cfg.CAM.LINE_OUT_ROI[moi-1][0], self.cfg.CAM.LINE_OUT_ROI[moi-1][1])
                         info_obj['frame'] = frame_id + self.estimate_frame(info_obj['centroid_deque'][0], info_obj['centroid_deque'][-1], 
