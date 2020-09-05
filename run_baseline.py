@@ -347,7 +347,7 @@ class VideoTracker(object):
                     print('sadfsafsdfsadfsdfasdfasdfasdfsd: ', info_obj['centroid_deque'])
                     if self.args.frame_estimate:
                         distance_point_line = self.distance_point2roi(centroid, self.cfg.CAM.LINE_OUT_ROI[moi-1][0], self.cfg.CAM.LINE_OUT_ROI[moi-1][1])
-                        info_obj['frame'] = info_obj['last_frame'] + self.estimate_frame(info_obj['centroid_deque'][0], info_obj['centroid_deque'][-1], 
+                        info_obj['frame'] = frame_id + self.estimate_frame(info_obj['centroid_deque'][0], info_obj['centroid_deque'][-1], 
                                                                 moi, info_obj['last_bbox'], distance_point_line)
                     else:
                         # info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
