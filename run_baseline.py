@@ -733,7 +733,7 @@ def parse_args():
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=True)
-    parser.add_argument("-c", "--count", type=str, default="cosine")
+    parser.add_argument("-c", "--count", type=str, default="cosine-line")
 
     return parser.parse_args()
 
