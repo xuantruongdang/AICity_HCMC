@@ -342,7 +342,7 @@ class VideoTracker(object):
                     #                                         info_obj['frame_in'], info_obj['frame_out'], moi, info_obj['last_bbox'])
                     # else:
                     #     info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
-                    info_obj['frame'] = info_obj['last_frame']
+                    info_obj['frame'] = frame_id
 
                     cv2.circle(_frame, (int(centroid[0]), int(centroid[1])), 12, self.color_list[moi-1], -1)
                     cv2.putText(_frame, str(class_id) + '.' + str(track_id), (int(centroid[0]) -3, int(centroid[1])),
