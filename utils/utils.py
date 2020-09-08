@@ -103,25 +103,3 @@ def check_in_polygon(center_point, polygon):
         return True
     
     return False
-
-'''
-    return mask(ROI) of MOI
-'''
-def check_number_MOI(number, cfg):
-    number_MOI = cfg.CAM.NUMBER_MOI
-    if number_MOI == 2:
-        switcher = {
-            1: Polygon(cfg.CAM.ROI1),
-            2: Polygon(cfg.CAM.ROI2)
-        }
-    if number_MOI == 6:
-        switcher = {
-            1: Polygon(cfg.CAM.ROI1),
-            2: Polygon(cfg.CAM.ROI2),
-            3: Polygon(cfg.CAM.ROI3),
-            4: Polygon(cfg.CAM.ROI4), 
-            5: Polygon(cfg.CAM.ROI5),
-            6: Polygon(cfg.CAM.ROI6)
-        }
-
-    return switcher.get(number, "Invalid ROI of cam")

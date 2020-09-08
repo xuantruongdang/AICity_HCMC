@@ -27,7 +27,7 @@ from tools import generate_detections as gdet
 
 from utils import MOI
 from utils.parser import get_config
-from utils.utils import check_in_polygon, check_number_MOI, init_board, write_board, config_cam
+from utils.utils import check_in_polygon, init_board, write_board, config_cam
 
 from src.detect import build_detector_v3
 # from src.classify import mobileNet
@@ -79,7 +79,6 @@ class VideoTracker(object):
 
     def run_detection(self, image, encoder, frame_id):
         boxes, confidence, classes = self.detector(image)
-        print("[INFO] len boxes: ", len(boxes))
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
                       zip(boxes, confidence, classes, features)]
@@ -220,32 +219,11 @@ class VideoTracker(object):
                 cv2.putText(image,str(track.det_class+1) + "." + str(track.track_id), (int(bbox[0]), int(bbox[1])-1), 0, 0.5, (0, 0, 0), 1)
                 cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
-                print('objs in track list: ', tracker.get_number_obj())
                 # draw track line
                 image = track.draw_track_line(image)
 
-            # print("[INFO] dict_MOI after added: ", dict_MOI)
-            # print("[INFO] dict_detections: after added", dict_detections)
-
         print("----------------")
         return image, objs_dict
-
-    # def run_classifier(self, clf_model, clf_labels, obj_img):
-    #     if len(obj_img) == 0:
-    #         return -1
-    #     class_id = mobileNet.predict_from_model(obj_img, clf_model, clf_labels)
-    #     return int(class_id)
-
-    # def compare_class(self, class_id):
-    #     if (class_id >= 0 and class_id <= 4):
-    #         class_id = 0
-    #     if (class_id > 4 and class_id <= 7):
-    #         class_id = 1
-    #     if (class_id == 9 or class_id == 10):
-    #         class_id = 2
-    #     if (class_id == 8 or (class_id <= 13 and class_id > 10)):
-    #         class_id = 3
-    #     return class_id
 
     # find parameters of line equation
     def line_equation(self, point1, point2):
@@ -268,7 +246,6 @@ class VideoTracker(object):
     def estimate_frame(self, point_previous_out, point_out, moi, last_bbox, distance_point_line):
         distance_in_out = math.sqrt((point_out[0] - point_previous_out[0])**2 + (point_out[1] - point_previous_out[1])**2)
         delta_frame = 1          # a.k.a delta time
-        print('distance_in_outttttttttttttttt: ', distance_in_out)
         velocity = distance_in_out / delta_frame
         acceleration = velocity / delta_frame
 
@@ -308,15 +285,6 @@ class VideoTracker(object):
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
         for (track_id, info_obj) in objs_dict.items():
             centroid = info_obj['centroid']
-            
-            # visualize when obj out the ROI
-            # if info_obj['frame'] == frame_id:
-            #     class_id = info_obj['class_id']
-            #     moi = info_obj['moi']
-            #     psc = info_obj['point_out']        # point show counting
-            #     cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, self.color_list[moi-1], -1)
-            #     cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
-            #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             if int(track_id) in counted_obj:  # check if track_id in counted_object ignore it
                 continue
@@ -382,7 +350,6 @@ class VideoTracker(object):
                                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     
                     arr_cnt_class[class_id][moi-1] += 1
-                    print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((info_obj['frame'], moi, class_id+1))
 
         print("--------------")
@@ -400,8 +367,6 @@ class VideoTracker(object):
             if info_obj['frame'] == frame_id:
                 class_id = info_obj['class_id']
                 # draw visual
-                print('point out: ', info_obj['point_out'])
-                print('type: ', type(info_obj['point_out']))
                 psc = info_obj['point_out']        # point show counting
                 cv2.circle(_frame, (int(psc[0]), int(psc[1])), 12, (0, 0, 200), -1)
                 cv2.putText(_frame, str(class_id + 1) + '.' + str(track_id), (int(psc[0]) -3, int(psc[1])),
@@ -423,15 +388,6 @@ class VideoTracker(object):
             if intersect_area_scale < 0.01 and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
 
-                # if self.use_classify:  # clf chua su dung duoc, do cat hinh sai frame!!!!!!!!!!!!!
-                #     bbox = info_obj['best_bbox']
-                #     obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :] #crop obj following bbox for clf
-                #     class_id = self.run_classifier(
-                #         clf_model, clf_labels, obj_img)
-                #     if class_id == -1:
-                #         continue
-                # else:
-                #     class_id = info_obj['class_id']
                 class_id = info_obj['class_id']
                 # special class not in contest
                 if class_id == 4:
@@ -456,7 +412,6 @@ class VideoTracker(object):
                 if moi > 0:
                     info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                     arr_cnt_class[class_id][moi-1] += 1
-                    print("[INFO] arr_cnt_class: \n", arr_cnt_class)
                     vehicles_detection_list.append((frame_id + self.cfg.CAM.FRAME_MOI[moi-1], moi, class_id+1))
 
         return _frame, arr_cnt_class, vehicles_detection_list
@@ -488,7 +443,6 @@ class VideoTracker(object):
         # if want to detect in path of original frame
         _frame_height, _frame_width = _frame.shape[:2]
         cropped_frame = np.copy(frame)
-        # cv2.rectangle(_frame, (int(frame_width*0), int(_frame_height*0.1)), (int(_frame_width*0.98), int(_frame_height*0.98)), (255, 0, 0), 2)
 
         print("[INFO] Detecting.....")
         if self.args.read_detect == 'None':
@@ -532,8 +486,6 @@ class VideoTracker(object):
         # init for classify module
         clf_model = None
         clf_labels = None
-        # if self.use_classify:
-        #     clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
 
         encoder = gdet.create_box_encoder(
             self.cfg.DEEPSORT.MODEL, batch_size=4)
@@ -555,7 +507,6 @@ class VideoTracker(object):
         count_frame = 0
         objs_dict = {}
 
-        # file_path = 'data/demo.MOV'
         if asyncVideo_flag:
             video_capture = VideoCaptureAsync(self.video_path)
         else:
@@ -627,8 +578,6 @@ class VideoTracker(object):
         # init for classify module
         clf_model = None
         clf_labels = None
-        # if self.use_classify:
-        #     clf_model, clf_labels = mobileNet.load_model_clf(self.cfg)
 
         encoder = gdet.create_box_encoder(
             self.cfg.DEEPSORT.MODEL, batch_size=4)
@@ -673,7 +622,6 @@ class VideoTracker(object):
             frame_info = os.path.basename(img_path).split('.')[0]
 
             t1 = time.time()
-            # frame = cv2.flip(frame, -1)
 
             _frame = self.process(frame, count_frame, frame_info, encoder, tracking, tracker,
                                   objs_dict, counted_obj, arr_cnt_class, clf_model, clf_labels)
