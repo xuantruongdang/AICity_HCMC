@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 
 from collections import deque, Counter 
 from shapely.geometry import Point, Polygon, shape, box
-from keras.models import model_from_json
 from sklearn.preprocessing import LabelEncoder
 from sympy import symbols, Eq, solve
 
@@ -292,6 +291,7 @@ class VideoTracker(object):
                         moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 elif self.count_method == 4:
                     MOI_candidate = self.find_MOI_candidate(self.cfg.CAM.ROI_SPLIT_REGION, info_obj['centroid_list'])
+                    print('moi canđiateeeeeeeee: ', (MOI_candidate, track_id))
                     moi, count = MOI.compute_MOI_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
                     if count == 0 or count > 1:
                         moi = MOI.compute_MOI_cosine_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
