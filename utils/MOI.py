@@ -111,3 +111,47 @@ def compute_MOI_cosine(cfg, point_in, point_out):
     index = np.where(cosine_results == min_cosine)
     moi = index[0][0] + 1
     return moi
+
+def compute_MOI_from_candidate(cfg, point_in, point_out, candidate_list):
+    line = cfg.CAM.LINE
+    p2, q2 = transform(point_in, point_out)
+
+    moi = -1
+    count = 0
+
+    for i in candidate_list:
+        # transform to Point format
+        leftpoint, rightpoint = transform(line[i-1][0], line[i-1][1])
+
+        # Vector V has first point p2 and last point q2: present the movement of vehicle
+        # if V intersect line1, MOI = 1
+        if (doIntersect(leftpoint, rightpoint, p2, q2)):
+            moi = i
+            count += 1
+
+    return moi, count
+
+def compute_MOI_cosine_from_candidate(cfg, point_in, point_out, candidate_list):
+    # when the obj goes over no MOI region
+    if len(candidate_list) == 0:
+        moi = compute_MOI_cosine(cfg, point_in, point_out)
+        return moi
+
+    MOI = cfg.CAM.MOI
+    cosine_results = []
+
+    # vector create by vehicle
+    vector_obj = np.array([point_out[0] - point_in[0], point_out[1] - point_in[1]])
+    vector_obj = vector_obj.reshape(1, 2)
+
+    for i in candidate_list:
+        moi_candidate = MOI[i-1]
+        vector_moi = np.array([moi_candidate[1][0] - moi_candidate[0][0], moi_candidate[1][1] - moi_candidate[0][1]])
+        vector_moi = vector_moi.reshape(1,2)
+        cosine = cosine_similarity(vector_moi, vector_obj)
+        cosine_results.append(cosine)
+
+    min_cosine = np.amax(cosine_results)
+    index = np.where(cosine_results == min_cosine)
+    moi = index[0][0] + 1
+    return moi   
