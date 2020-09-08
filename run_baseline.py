@@ -66,6 +66,8 @@ class VideoTracker(object):
             self.count_method = 2
         elif args.count == "cosine-line":
             self.count_method = 3
+        elif args.count == "cosine-line-region":
+            self.count_method = 4
 
         self.polygon_ROI = Polygon(cfg.CAM.ROI_DEFAULT)
         self.ROI_area = Polygon(shell=self.polygon_ROI).area
@@ -191,7 +193,7 @@ class VideoTracker(object):
                                                        'best_bboxconf': track.det_confidence,
                                                        'class_id': track.det_class,
                                                        'frame': -1,
-                                                       'centroid_deque': deque([], 10),
+                                                       'centroid_list': [],
                                                        'class_list': [] }}) # frame when vehicle out ROI BTC (frame estimate)
 
                 # get the first point(x,y) when obj move into ROI
@@ -208,7 +210,7 @@ class VideoTracker(object):
                                                       'class_id': track.det_class})
 
                 objs_dict[track.track_id]['centroid'] = centroid  # update position of obj each frame
-                objs_dict[track.track_id]['centroid_deque'].append(centroid) 
+                objs_dict[track.track_id]['centroid_list'].append(centroid) 
                 objs_dict[track.track_id]['last_bbox'] = bbox
                 objs_dict[track.track_id]['last_frame'] = frame_id
                 objs_dict[track.track_id]['class_list'].append(track.det_class)
@@ -288,6 +290,16 @@ class VideoTracker(object):
         occurence_count = Counter(class_list) 
         return occurence_count.most_common(1)[0][0]
 
+    def find_MOI_candidate(self, region_list, centroid_list):
+        MOI_candidate = []
+        for index, region in enumerate(region_list):
+            region = Polygon(region)
+            centroids_in_region = [centroid for centroid in centroid_list if check_in_polygon(centroid, region)]
+            percent_point = len(centroids_in_region) / len(centroid_list)
+            if percent_point >= self.cfg.CAM.PIM_THRESHOLD:
+                MOI_candidate.append(index + 1)
+        return MOI_candidate
+
     def counting(self, count_frame, cropped_frame, _frame, objs_dict, counted_obj, arr_cnt_class, clf_model=None, clf_labels=None):
         vehicles_detection_list = []
         frame_id = count_frame
@@ -339,6 +351,11 @@ class VideoTracker(object):
                     moi, _, count = MOI.compute_MOI(self.cfg, info_obj['point_in'], info_obj['point_out'])
                     if count == 0 or count > 1:
                         moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
+                elif self.count_method == 4:
+                    MOI_candidate = self.find_MOI_candidate(self.cfg.CAM.ROI_SPLIT_REGION, info_obj['centroid_list'])
+                    moi, count = MOI.compute_MOI_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
+                    if count == 0 or count > 1:
+                        moi = MOI.compute_MOI_cosine_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
                 
                 # mark objs which are counted
                 counted_obj.append(int(track_id))
@@ -751,7 +768,7 @@ def parse_args():
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=False)
-    parser.add_argument("-c", "--count", type=str, default="cosine-line")
+    parser.add_argument("-c", "--count", type=str, default="cosine-line-region")
 
     return parser.parse_args()
 

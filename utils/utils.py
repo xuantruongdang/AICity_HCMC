@@ -5,6 +5,10 @@ import os
 from shapely.geometry import Point, Polygon
 
 def config_cam(img, cfg, args):
+    
+    color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
+                  (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
+
     line = cfg.CAM.LINE
     line_startX = []
     line_endX = []
@@ -16,13 +20,16 @@ def config_cam(img, cfg, args):
     moi_endX = []
     moi_startY = []
     moi_endY = []
+
+    for index, region in enumerate(cfg.CAM.ROI_SPLIT_REGION):
+        region = np.array(region)
+        cv2.drawContours(img, [region], -1, color_list[index], 2)
     
     roi_default = np.array(cfg.CAM.ROI_DEFAULT)
     # tracking_roi = np.array(cfg.CAM.TRACKING_ROI)
     # roi_btc = np.array(cfg.CAM.ROI_BTC)
 
-    color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), (238, 180, 180),
-                  (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
+    
 
     # plot ROI
     cv2.drawContours(img, [roi_default], -1, (0, 0, 255), 2)
