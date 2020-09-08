@@ -139,19 +139,24 @@ def compute_MOI_cosine_from_candidate(cfg, point_in, point_out, candidate_list):
 
     MOI = cfg.CAM.MOI
     cosine_results = []
+    moi_list = []
 
     # vector create by vehicle
     vector_obj = np.array([point_out[0] - point_in[0], point_out[1] - point_in[1]])
     vector_obj = vector_obj.reshape(1, 2)
 
     for i in candidate_list:
+        print('i: ', i)
         moi_candidate = MOI[i-1]
+        print('moi_candidate in MOI: ', moi_candidate)
         vector_moi = np.array([moi_candidate[1][0] - moi_candidate[0][0], moi_candidate[1][1] - moi_candidate[0][1]])
         vector_moi = vector_moi.reshape(1,2)
         cosine = cosine_similarity(vector_moi, vector_obj)
+        moi_list.append(i)
         cosine_results.append(cosine)
+        print('cosine: ', cosine)
 
     min_cosine = np.amax(cosine_results)
     index = np.where(cosine_results == min_cosine)
-    moi = index[0][0] + 1
+    moi = moi_list[index[0][0]]
     return moi   

@@ -291,11 +291,12 @@ class VideoTracker(object):
                         moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 elif self.count_method == 4:
                     MOI_candidate = self.find_MOI_candidate(self.cfg.CAM.ROI_SPLIT_REGION, info_obj['centroid_list'])
-                    print('moi canđiateeeeeeeee: ', (MOI_candidate, track_id))
+                    print('moi candidateeeeeeeee: ', (MOI_candidate, track_id))
                     moi, count = MOI.compute_MOI_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
+                    print('moi, count before: ', (moi, count))
                     if count == 0 or count > 1:
                         moi = MOI.compute_MOI_cosine_from_candidate(self.cfg, info_obj['point_in'], info_obj['point_out'], MOI_candidate)
-                
+                    print('moi, count after: ', (moi, count))
                 # mark objs which are counted
                 counted_obj.append(int(track_id))
 
