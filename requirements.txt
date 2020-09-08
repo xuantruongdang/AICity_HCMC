@@ -27,7 +27,7 @@ matplotlib==3.3.1
 mccabe==0.6.1
 mpmath==1.1.0
 numpy==1.19.1
-opencv-python==4.3.0.36
+opencv-python==4.2.0.32
 parse-utils==1.2
 Pillow==7.2.0
 protobuf==3.12.4
@@ -46,8 +46,10 @@ tensorflow==1.14.0
 tensorflow-estimator==1.14.0
 termcolor==1.1.0
 threadpoolctl==2.1.0
-torch @ https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
+# torch @ https://download.pytorch.org/whl/cu100/torch-1.1.0-cp37-cp37m-win_amd64.whl
 tqdm==4.48.2
 Werkzeug==1.0.1
 wrapt==1.12.1
 zipp==3.1.0
+torch
+torchvision
