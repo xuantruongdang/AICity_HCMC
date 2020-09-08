@@ -33,3 +33,5 @@ CAM:
   ROI_SPLIT_REGION : [ [[1,460],[2,336], [150, 210],[599,229],[594,462]], [[594,462],[599,229],[963,247],[1274,464]]]
   
   D_THRESHOLD: [40,40]
+  # point-in-moi-region threshold
+  PIM_THRESHOLD: 0.1

@@ -29,3 +29,6 @@ CAM:
   TEST1 : [[134, 596], [650, 355], [1211, 431], [1199, 719]]
   ROI_SPLIT_REGION : [[[134, 596], [650, 355], [1211, 431], [1199, 719]]]
   D_THRESHOLD: [70]
+  
+  # point-in-moi-region threshold
+  PIM_THRESHOLD: 0.1
