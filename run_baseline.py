@@ -30,7 +30,6 @@ from utils.parser import get_config
 from utils.utils import check_in_polygon, init_board, write_board, config_cam
 
 from src.detect import build_detector_v3
-# from src.classify import mobileNet
 from videocaptureasync import VideoCaptureAsync
 
 
@@ -41,7 +40,6 @@ class VideoTracker(object):
     def __init__(self, cfg, args):
         self.cfg = cfg
         self.args = args
-        self.use_classify = args.use_classify
         self.video_flag = args.video
         self.video_path = args.VIDEO_PATH
         self.track_line = []
@@ -58,7 +56,7 @@ class VideoTracker(object):
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
 
         self.result_filename = os.path.join(
-            './logs/output', self.video_name + '_result.txt')
+            './data/submission_output', 'submission.txt')
 
         if args.count == "cosine":
             self.count_method = 1
@@ -98,20 +96,6 @@ class VideoTracker(object):
                             int((bbox[1] + bbox[3])//2))
             if check_in_polygon(centroid_det, self.polygon_ROI):
                 detections_in_ROI.append(det)
-        # print("[INFO] detections in ROI: ", len(detections_in_ROI))
-        logFile = os.path.join(log_detected_cam_dir,
-                               'frame_' + str(frame_id) + '.txt')
-        with open(logFile, "a+") as f:
-            for det in detections_in_ROI:
-            # for det in detections:
-                bbox = det.to_tlbr()
-                score = "%.2f" % round(det.confidence * 100, 2) + "%"
-
-                if len(classes) > 0:
-                    cls = det.cls
-                    # write log file
-                    f.write("{} {} {} {} {} {}\n".format(int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]),
-                                                         round(det.confidence * 100, 2), cls))
 
         print("-----------------")
         # return detections_in_ROI
@@ -172,7 +156,6 @@ class VideoTracker(object):
             tracker.predict()
             tracker.update(detections)
             print("[INFO] track in ROI: ", len(tracker.tracks))
-            print("[INFO] detection in ROI: ", len(detections))
 
             for det in detections:
                 bbox_det = det.to_tlbr()
@@ -298,18 +281,6 @@ class VideoTracker(object):
                 if class_id == 4:
                     continue
 
-                bbox = info_obj['last_bbox']
-
-                # export image of counted objs to check classify
-                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
-                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                try:
-                    cv2.imwrite(image_file, obj_img)
-                except:
-                    print("Something went wrong at line 260")
-
                 # compute MOI of obj
                 if self.count_method == 1:
                     moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
@@ -340,7 +311,6 @@ class VideoTracker(object):
                         info_obj['frame'] = frame_id + self.estimate_frame(info_obj['centroid_deque'][0], info_obj['centroid_deque'][-1], 
                                                                 moi, info_obj['last_bbox'], distance_point_line)
                     else:
-                        # info_obj['frame'] = frame_id + self.cfg.CAM.FRAME_MOI[moi-1]
                         info_obj['frame'] = frame_id
 
                     # visualize when obj out the ROI
@@ -382,8 +352,6 @@ class VideoTracker(object):
             obj_area = obj_poly.area
 
             intersect_area_scale = self.polygon_ROI.intersection(obj_poly).area / obj_area
-            print('class id: ', track_id)
-            print('intersect area scale: ', intersect_area_scale)
 
             if intersect_area_scale < 0.01 and info_obj['flag_in_out'] == 1:
                 info_obj['point_out'] = centroid
@@ -449,7 +417,6 @@ class VideoTracker(object):
             detections, detections_in_ROI = self.run_detection(
                 cropped_frame, encoder, count_frame)
         else:
-            print("[INFO] use model")
             detections, detections_in_ROI = self.read_detection(
                 cropped_frame, frame_info, encoder, count_frame)
 
@@ -494,7 +461,7 @@ class VideoTracker(object):
         tracker = Tracker(self.cfg, metric)
 
         tracking = True
-        writeVideo_flag = True
+        writeVideo_flag = self.args.out_video
         asyncVideo_flag = False
 
         list_classes = ['loai_1', 'loai_2', 'loai_3', 'loai_4']
@@ -651,53 +618,13 @@ class VideoTracker(object):
 
 
 def create_logs_dir():
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
+    if not os.path.exists('data'):
+        os.mkdir('data')
 
-    log_detected_dir = os.path.join('logs', 'detection')
-    if not os.path.exists(log_detected_dir):
-        os.mkdir(log_detected_dir)
-
-    log_tracking_dir = os.path.join('logs', 'tracking')
-    if not os.path.exists(log_tracking_dir):
-        os.mkdir(log_tracking_dir)
-
-    log_output_dir = os.path.join('logs', 'output')
+    log_output_dir = os.path.join('data', 'submission_output')
     if not os.path.exists(log_output_dir):
         os.mkdir(log_output_dir)
-
-    log_classify_dir = os.path.join('logs', 'check_classify')
-    if not os.path.exists(log_classify_dir):
-        os.mkdir(log_classify_dir)
-
-    return log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir
-
-
-def create_cam_log(cam_name, log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir):
-    log_detected_cam_dir = os.path.join(log_detected_dir, cam_name)
-    if not os.path.exists(log_detected_cam_dir):
-        os.mkdir(log_detected_cam_dir)
-
-    log_tracking_cam_dir = os.path.join(log_tracking_dir, cam_name)
-    if not os.path.exists(log_tracking_cam_dir):
-        os.mkdir(log_tracking_cam_dir)
-
-    log_output_cam_dir = os.path.join(log_output_dir, cam_name)
-    if not os.path.exists(log_output_cam_dir):
-        os.mkdir(log_output_cam_dir)
-
-    log_classify_cam_dir = os.path.join(log_classify_dir, cam_name)
-    if not os.path.exists(log_classify_cam_dir):
-        os.mkdir(log_classify_cam_dir)
-    for i in range(4):
-
-        folder_clf_class = os.path.join(
-            log_classify_cam_dir, "class_" + str(i+1))
-        if not os.path.exists(folder_clf_class):
-            os.mkdir(folder_clf_class)
-
-    return log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir, log_classify_cam_dir
-
+    return log_output_dir
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -708,11 +635,9 @@ def parse_args():
                         default="./configs/deep_sort.yaml")
     parser.add_argument("--config_cam", type=str,
                         default="./configs/cam6.yaml")
-    parser.add_argument("--use_classify", type=bool, default=False)
-    parser.add_argument("--config_classifier", type=str,
-                        default="./configs/mobileNet.yaml")
     parser.add_argument("-v", "--visualize", type=bool, default=False)
-    parser.add_argument("--video", type=bool, default=False)
+    parser.add_argument("--out_video", type=bool, default=False)
+    parser.add_argument("--video", type=bool, default=True)
     parser.add_argument("--read_detect", type=str, default="None")
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=False)
@@ -722,8 +647,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    if os.path.exists("logs"):
-        shutil.rmtree('./logs')
+    if os.path.exists("data/submission_output"):
+        shutil.rmtree('./data/submission_output')
 
     args = parse_args()
     cfg = get_config()
@@ -731,15 +656,9 @@ if __name__ == '__main__':
     cfg.merge_from_file(args.config_detection)
     cfg.merge_from_file(args.config_deepsort)
     cfg.merge_from_file(args.config_cam)
-    cfg.merge_from_file(args.config_classifier)
 
     # create dir/subdir logs
-    log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir = create_logs_dir()
-
-    # create dir cam log
-    log_detected_cam_dir, log_tracking_cam_dir, log_output_cam_dir, log_classify_cam_dir = create_cam_log(cfg.CAM.NAME,
-                                                                                                          log_detected_dir, log_tracking_dir, log_output_dir, log_classify_dir)
-
+    log_output_dir = create_logs_dir()
 
     video_tracker = VideoTracker(cfg, args)
     # video_tracker.counting_base_area()
