@@ -361,17 +361,6 @@ class VideoTracker(object):
                 if class_id == 4:
                     continue
 
-                bbox = info_obj['last_bbox']
-
-                obj_img = cropped_frame[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2]), :]
-                image_folder = os.path.join(
-                    log_classify_cam_dir, "class_" + str(class_id+1))
-                image_file = os.path.join(image_folder, 'frame_' + str(frame_id) + '_' + str(track_id) + '_' + str(class_id) + '.jpg')
-                try:
-                    cv2.imwrite(image_file, obj_img)
-                except:
-                    print("Something went wrong at line 260")
-
                 # MOI of obj
                 moi = MOI.compute_MOI_cosine(self.cfg, info_obj['point_in'], info_obj['point_out'])
                 counted_obj.append(int(track_id))
@@ -644,7 +633,6 @@ def parse_args():
     parser.add_argument("-c", "--count", type=str, default="cosine-line-region")
 
     return parser.parse_args()
-
 
 if __name__ == '__main__':
     if os.path.exists("data/submission_output"):

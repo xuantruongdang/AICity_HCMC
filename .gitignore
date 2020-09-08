@@ -167,6 +167,8 @@ log.txt
 detectron2/
 det_dir/
 myEnv/
+submission_output/
+test_data/
 
 cam_20_files.txt
 det_txt/
