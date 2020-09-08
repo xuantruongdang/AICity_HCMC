@@ -23,8 +23,8 @@ CAM:
 
   # distance for auto estimate frame
   DISTANCE_ROI: [260]
-  TEST1 : [[238, 454], [694, 284], [1156, 306], [1262, 621]]
-  ROI_SPLIT_REGION: [[[238, 454], [694, 284], [1156, 306], [1262, 621]]]
+  TEST1 : [[87,425], [540,279], [1156, 303], [1262, 621]]
+  ROI_SPLIT_REGION: [[[87,425], [540,279], [1156, 303], [1262, 621]]]
   D_THRESHOLD: [90]
 
   # point-in-moi-region threshold
