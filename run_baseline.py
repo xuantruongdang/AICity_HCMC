@@ -32,12 +32,13 @@ from utils.utils import check_in_polygon, init_board, write_board, config_cam
 from src.detect import build_detector_v3
 from videocaptureasync import VideoCaptureAsync
 
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg as config_detectron
 
 warnings.filterwarnings('ignore')
 
-
 class VideoTracker(object):
-    def __init__(self, cfg, args):
+    def __init__(self, cfg, args, predictor):
         self.cfg = cfg
         self.args = args
         self.video_flag = args.video
@@ -46,8 +47,9 @@ class VideoTracker(object):
         self.count_point = []
 
         if args.read_detect == 'None':
-            self.detector = build_detector_v3(cfg)
-            self.classes = self.detector.classes
+            # self.detector = build_detector_v3(cfg)
+            self.predictor= predictor
+            # self.classes = self.detector.classes
 
         if os.path.basename(args.VIDEO_PATH).split('.')[1] == 'txt':
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[
@@ -75,8 +77,39 @@ class VideoTracker(object):
         self.color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), 
                             (238, 180, 180), (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
 
+    def detect_image(self, image):
+        outputs = self.predictor(image)
+
+        boxes = outputs['instances'].pred_boxes
+        scores = outputs['instances'].scores
+        classes = outputs['instances'].pred_classes
+
+        list_boxes = []
+        list_scores = []
+        list_classes = []
+
+        for i in range(len(classes)):
+            if (scores[i] > 0.5):
+                for j in boxes[i]:
+                    x = int(j[0])
+                    y = int(j[1])
+                    w = int(j[2]) - x
+                    h = int(j[3]) - y
+                score = float(scores[i])
+                class_id = int(classes[i])
+                list_boxes.append([x, y, w, h])
+                list_scores.append(score)
+                list_classes.append(class_id)
+
+                # cv2.rectangle(image, (x, y), (x+w, y+h), (random.randint(
+                #     0, 255), random.randint(0, 255), 255), 1)
+                #with open(file_path, "a+") as f:
+                #    f.write("{} {} {} {} {} {}\n".format(x, y, w, h, score, class_id))
+
+        return list_boxes, list_scores, list_classes
+
     def run_detection(self, image, encoder, frame_id):
-        boxes, confidence, classes = self.detector(image)
+        boxes, confidence, classes = self.detect_image(image)
         features = encoder(image, boxes)
         detections = [Detection(bbox, 1.0, cls, feature) for bbox, _, cls, feature in
                       zip(boxes, confidence, classes, features)]
@@ -631,6 +664,7 @@ def parse_args():
     parser.add_argument("--base_area", type=bool, default=False)
     parser.add_argument("-f", "--frame_estimate", type=bool, default=False)
     parser.add_argument("-c", "--count", type=str, default="cosine-line-region")
+    parser.add_argument("-m", "--model", type=str, default="models/troi_sang.pth")
 
     return parser.parse_args()
 
@@ -639,6 +673,24 @@ if __name__ == '__main__':
         shutil.rmtree('./data/submission_output')
 
     args = parse_args()
+
+    path_weigth = args.model
+    path_config = "detectron2/configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml"
+    confidences_threshold = 0.5
+    num_of_class = 5
+
+    classes = ['Loai1', 'Loai2', 'Loai3', 'Loai4', 'Loai5']
+
+    detectron = config_detectron()
+    detectron.MODEL.DEVICE= 'cuda'
+    detectron.merge_from_file(path_config)
+    detectron.MODEL.WEIGHTS = path_weigth
+
+    detectron.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidences_threshold
+    detectron.MODEL.ROI_HEADS.NUM_CLASSES = num_of_class
+
+    predictor = DefaultPredictor(detectron)
+
     cfg = get_config()
     # setup code
     cfg.merge_from_file(args.config_detection)
@@ -648,7 +700,7 @@ if __name__ == '__main__':
     # create dir/subdir logs
     log_output_dir = create_logs_dir()
 
-    video_tracker = VideoTracker(cfg, args)
+    video_tracker = VideoTracker(cfg, args, predictor)
     # video_tracker.counting_base_area()
     print('args.video: ', args.video)
     if args.video:
