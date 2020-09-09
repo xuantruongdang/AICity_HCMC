@@ -15,8 +15,7 @@ import matplotlib.pyplot as plt
 from collections import deque, Counter 
 from shapely.geometry import Point, Polygon, shape, box
 from sklearn.preprocessing import LabelEncoder
-from sympy import symbols, Eq, solve
-
+# from sympy import symbols, Eq, solve
 
 from libs.deep_sort import preprocessing
 from libs.deep_sort import nn_matching
