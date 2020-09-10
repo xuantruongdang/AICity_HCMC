@@ -76,6 +76,13 @@ class VideoTracker(object):
         self.color_list = [(255,0,255), (255,100,0), (0,255,0), (139, 69, 19), (132, 112, 255), (0, 154, 205), (0, 255, 127), 
                             (238, 180, 180), (255, 69, 0), (238, 106, 167), (221, 160, 221), (0, 128, 128)]
 
+    def convert_class_detT2(self, class_id_detT2):
+        if class_id_detT2 == 0:
+            class_id_detT2 = 4
+        else:
+            class_id_detT2 -= 1
+        return class_id_detT2
+
     def detect_image(self, image):
         outputs = self.predictor(image)
 
@@ -96,6 +103,8 @@ class VideoTracker(object):
                     h = int(j[3]) - y
                 score = float(scores[i])
                 class_id = int(classes[i])
+                if self.cfg.CAM.NAME == 'CAM_09' or self.cfg.CAM.NAME == 'CAM_10' or self.cfg.CAM.NAME == 'CAM_17':
+                    class_id = self.convert_class_detT2(class_id)
                 list_boxes.append([x, y, w, h])
                 list_scores.append(score)
                 list_classes.append(class_id)
