@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
 
 # RUN apt-get update && apt-get install -y \
 #     curl \
@@ -11,24 +11,24 @@ FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 
 RUN apt-get update
 
-RUN apt-get install -y --fix-missing \
-    build-essential \
-    cmake \
-    gfortran \
-    git \
+#RUN apt-get install -y --fix-missing \
+#    build-essential \
+#    cmake \
+#    gfortran \
+RUN apt-get install git \
     # wget \
     # curl \
-    graphicsmagick \
-    libgraphicsmagick1-dev \
-    libatlas-base-dev \
-    libavcodec-dev \
-    libavformat-dev \
-    libgtk2.0-dev \
-    libjpeg-dev \
-    liblapack-dev \
-    libswscale-dev \
-    pkg-config \
-    python3-dev \
+   # graphicsmagick \
+   # libgraphicsmagick1-dev \
+   # libatlas-base-dev \
+   # libavcodec-dev \
+   # libavformat-dev \
+   # libgtk2.0-dev \
+   # libjpeg-dev \
+   # liblapack-dev \
+   # libswscale-dev \
+   # pkg-config \
+   # python3-dev \
     # python3-numpy \
     software-properties-common \
     # zip \
@@ -54,10 +54,10 @@ WORKDIR /AI-city
 RUN git clone https://github.com/facebookresearch/detectron2.git && \
     python3 -m pip install -e detectron2
 
-ENV FORCE_CUDA="1"
+#ENV FORCE_CUDA="1"
 # This will by default build detectron2 for all common cuda architectures and take a lot more time,
 # because inside `docker build`, there is no way to tell which architecture will be used.
-ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
-ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
+#ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
+#ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
 
 #RUN ./run.sh
