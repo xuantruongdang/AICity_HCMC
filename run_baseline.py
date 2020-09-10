@@ -57,7 +57,7 @@ class VideoTracker(object):
             self.video_name = os.path.basename(args.VIDEO_PATH).split('.')[0]
 
         self.result_filename = os.path.join(
-            './data/submission_output', 'submission.txt')
+            '../data/submission_output', 'submission.txt')
 
         if args.count == "cosine":
             self.count_method = 1
