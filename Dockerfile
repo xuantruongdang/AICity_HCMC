@@ -15,7 +15,7 @@ RUN apt-get update
 #    build-essential \
 #    cmake \
 #    gfortran \
-RUN apt-get install git \
+RUN apt-get install -y git \
     # wget \
     # curl \
    # graphicsmagick \
